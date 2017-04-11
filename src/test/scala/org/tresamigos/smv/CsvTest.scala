@@ -26,7 +26,8 @@ class CsvTest extends SmvTestUtil {
 
   test("Test run method in SmvFile") {
     object TestFile
-        extends SmvCsvFile("./" + testDataDir + "CsvTest/test1")(CsvAttributes.defaultCsvWithHeader) {
+        extends SmvCsvFile("./" + testDataDir + "CsvTest/test1")(
+          CsvAttributes.defaultCsvWithHeader) {
       override def run(df: DataFrame) = {
         import df.sqlContext.implicits._
         df.smvSelectPlus(smvStrCat($"name", $"id") as "name_id")

@@ -213,7 +213,9 @@ abstract class SmvDataSet extends FilenamePart {
     util.DataSet.persist(app.sparkSession, rdd, moduleCsvPath(prefix), app.genEdd)
 
   private[smv] def readPersistedFile(prefix: String = ""): Try[DataFrame] =
-    Try(util.DataSet.readFile(app.sparkSession, moduleCsvPath(prefix))(CsvAttributes.defaultCsvAttributes))
+    Try(
+      util.DataSet.readFile(app.sparkSession, moduleCsvPath(prefix))(
+        CsvAttributes.defaultCsvAttributes))
 
   private[smv] def computeRDD: DataFrame = {
     val dsDqm     = new DQMValidator(createDsDqm())
@@ -375,7 +377,8 @@ case class SmvCsvFile(
     override val path: String,
     override val schemaPath: String = null,
     override val isFullPath: Boolean = false
-)(implicit csvAttributes: CsvAttributes) extends SmvFile
+)(implicit csvAttributes: CsvAttributes)
+    extends SmvFile
     with SmvDSWithParser {
   assert(csvAttributes != null)
 
@@ -400,7 +403,8 @@ case class SmvCsvFile(
 class SmvMultiCsvFiles(
     dir: String,
     override val schemaPath: String = null
-)(implicit csvAttributes: CsvAttributes) extends SmvFile
+)(implicit csvAttributes: CsvAttributes)
+    extends SmvFile
     with SmvDSWithParser {
 
   assert(csvAttributes != null)

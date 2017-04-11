@@ -32,8 +32,7 @@ object DataSet {
    * The default format is headerless CSV with '"' as the quote
    * character
    */
-  def readFile(sparkSession: SparkSession,
-               path: String)(implicit attr: CsvAttributes): DataFrame =
+  def readFile(sparkSession: SparkSession, path: String)(implicit attr: CsvAttributes): DataFrame =
     new FileIOHandler(sparkSession, path).csvFileWithSchema
 
   /**

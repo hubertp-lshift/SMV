@@ -185,7 +185,7 @@ class SmvPyClient(val j_smvApp: SmvApp) {
     new SmvCsvFile(path)(csvAttr) {
       override def fqn = moduleName
 
-      override val forceParserCheck = pForceParserCheck
+      override val forceParserCheck   = pForceParserCheck
       override val failAtParsingError = pFailAtParsingError
     }
   }

@@ -141,10 +141,10 @@ package object shell {
       n: Int = 100000,
       ca: CsvAttributes = CsvAttributes.defaultCsvWithHeader
   ) = {
-    val helper                 = new SchemaDiscoveryHelper(SmvApp.app.sqlContext)
-    val schema                 = helper.discoverSchemaFromFile(path, n)(ca)
-    val outpath                = SmvSchema.dataPathToSchemaPath(path) + ".toBeReviewed"
-    val outFileName            = (new File(outpath)).getName
+    val helper      = new SchemaDiscoveryHelper(SmvApp.app.sqlContext)
+    val schema      = helper.discoverSchemaFromFile(path, n)(ca)
+    val outpath     = SmvSchema.dataPathToSchemaPath(path) + ".toBeReviewed"
+    val outFileName = (new File(outpath)).getName
     schema.saveToLocalFile(outFileName)
     println(s"Discovered schema file saved as ${outFileName}, please review and make changes.")
   }

@@ -20,7 +20,8 @@ import dqm.{SmvDQM, FailParserCountPolicy}
 class RejectTest extends SmvTestUtil {
   test("test csvFile loader rejection with NoOp") {
     object file
-        extends SmvCsvFile("./" + testDataDir + "RejectTest/test2")(CsvAttributes.defaultCsvAttributes) {
+        extends SmvCsvFile("./" + testDataDir + "RejectTest/test2")(
+          CsvAttributes.defaultCsvAttributes) {
       override val failAtParsingError = false
     }
     val df = file.rdd
@@ -58,7 +59,8 @@ class RejectTest extends SmvTestUtil {
 
   test("test csvFile loader with FailParserCountPolicy") {
     object file
-        extends SmvCsvFile("./" + testDataDir + "RejectTest/test2")(CsvAttributes.defaultCsvAttributes) {
+        extends SmvCsvFile("./" + testDataDir + "RejectTest/test2")(
+          CsvAttributes.defaultCsvAttributes) {
       override val failAtParsingError = false
       override def dqm()              = SmvDQM().add(FailParserCountPolicy(10))
     }
