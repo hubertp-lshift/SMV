@@ -33,9 +33,8 @@ object DataSet {
    * character
    */
   def readFile(sparkSession: SparkSession,
-               path: String,
-               attr: Option[CsvAttributes] = Some(CsvAttributes.defaultCsv)): DataFrame =
-    new FileIOHandler(sparkSession, path).csvFileWithSchema(attr)
+               path: String)(implicit attr: CsvAttributes): DataFrame =
+    new FileIOHandler(sparkSession, path).csvFileWithSchema
 
   /**
    * Save the dataframe content to disk, optionally generate edd.

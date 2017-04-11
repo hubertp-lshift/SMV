@@ -6,7 +6,7 @@ import org.apache.spark.sql.functions._
 class CsvTest extends SmvTestUtil {
 
   test("Test loading of csv file with header") {
-    val file = SmvCsvFile("./" + testDataDir + "CsvTest/test1", Some(CsvAttributes.defaultCsvWithHeader))
+    val file = SmvCsvFile("./" + testDataDir + "CsvTest/test1")(CsvAttributes.defaultCsvWithHeader)
     val df   = file.rdd
     import df.sparkSession.implicits._
     val res = df.map(r => (r.getString(0), r.getInt(1))).collect.mkString(",")
@@ -26,8 +26,7 @@ class CsvTest extends SmvTestUtil {
 
   test("Test run method in SmvFile") {
     object TestFile
-        extends SmvCsvFile("./" + testDataDir + "CsvTest/test1",
-                           Some(CsvAttributes.defaultCsvWithHeader)) {
+        extends SmvCsvFile("./" + testDataDir + "CsvTest/test1")(CsvAttributes.defaultCsvWithHeader) {
       override def run(df: DataFrame) = {
         import df.sqlContext.implicits._
         df.smvSelectPlus(smvStrCat($"name", $"id") as "name_id")
@@ -51,10 +50,10 @@ class CsvTest extends SmvTestUtil {
 
   test("Test writing CSV file with attributes in schema file.") {
     val df         = dfFrom("f1:String;f2:String", "x,y;a,b").repartition(1)
-    val ca         = CsvAttributes('|', '^', true)
+    val ca         = new CsvAttributes('|', '^', true)
     val csvPath    = testcaseTempDir + "/test_attr.csv"
     val schemaPath = testcaseTempDir + "/test_attr.schema"
-    df.saveAsCsvWithSchema(csvPath, ca)
+    df.saveAsCsvWithSchema(csvPath)(ca)
 
     // verify header partition in csv file
     assertFileEqual(csvPath + "/part-00000", "^f1^|^f2^\n")
@@ -108,10 +107,10 @@ class CsvTest extends SmvTestUtil {
     /** Test for CSV Excel format  **/
     var df = dfFrom("f1:String;f2:String",
                     "\"left\"\"right comma,\",\"escape char \\\";\"a\",\"b\"").repartition(1)
-    var ca      = CsvAttributes()
+    var ca      = new CsvAttributes()
     val csvPath = testcaseTempDir + "/test_escape_quotes.csv"
 
-    df.saveAsCsvWithSchema(csvPath, ca)
+    df.saveAsCsvWithSchema(csvPath)(ca)
 
     // verify that input "" is converted to " internally in DF
     assert(df.collect()(0)(0) == """left"right comma,""")
@@ -130,21 +129,21 @@ class CsvTest extends SmvTestUtil {
     /** Test for other formats.  This one uses ^ as a quote char and \ as an escape char **/
     df = dfFrom("@delimiter = ,;@has-header = false;@quote-char = ^;f1:String;f2:String",
                 "^left\\^right quote\\\" comma\\, ^,^escape char\\\\^;a,b").repartition(1)
-    ca = CsvAttributes(',', '^', false)
+    ca = new CsvAttributes(',', '^', false)
     val csvPathCaret = testcaseTempDir + "/test_escape_caret.csv"
 
-    df.saveAsCsvWithSchema(csvPathCaret, ca)
-    val file = SmvCsvFile("./" + csvPathCaret, Some(ca))
+    df.saveAsCsvWithSchema(csvPathCaret)(ca)
+    val file = SmvCsvFile("./" + csvPathCaret)(ca)
     dfOut = file.rdd
 
     assertDataFramesEqual(df, dfOut)
 
     /** Test for arrays **/
     df = dfFrom("a:String;b:Array[String]", """ "a1", "b""1|b2" """).repartition(1)
-    ca = CsvAttributes()
+    ca = new CsvAttributes()
     val csvPathArray = testcaseTempDir + "/test_escape_array.csv"
 
-    df.saveAsCsvWithSchema(csvPathArray, ca)
+    df.saveAsCsvWithSchema(csvPathArray)(ca)
 
     // verify that output uses Excel's CSV format
     assertFileEqual(csvPathArray + "/part-00000",

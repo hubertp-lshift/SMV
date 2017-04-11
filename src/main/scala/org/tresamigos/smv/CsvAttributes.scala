@@ -17,19 +17,34 @@ package org.tresamigos.smv
 import org.apache.spark.rdd.RDD
 import scala.reflect.ClassTag
 
-case class CsvAttributes(val delimiter: Char = ',',
-                         val quotechar: Char = '\"',
-                         val hasHeader: Boolean = false) {
-  def isExcelCSV: Boolean = (quotechar == '"')
+
+
+class CsvAttributes(val delimiter: Char = ',',
+                             val quotechar: Char = '\"',
+                             val hasHeader: Boolean = false) extends Serializable {
+  def isExcelCSV: Boolean = quotechar == '"'
+
+  def fromSchema(schema: SmvSchema): CsvAttributes = this
+
+  override def equals(other: Any): Boolean = other match {
+    case attr: CsvAttributes => (attr.delimiter == delimiter) &&
+      (attr.quotechar == quotechar) && (attr.hasHeader == hasHeader)
+    case _ => false
+  }
+}
+
+private case object InferFromSchemaCsvAttributes extends CsvAttributes {
+  override def fromSchema(schema: SmvSchema): CsvAttributes = schema.extractCsvAttributes()
 }
 
 object CsvAttributes {
-  val defaultCsv = new CsvAttributes()
+  lazy val defaultCsvAttributes: CsvAttributes = new CsvAttributes()
 
   // common CsvAttributes combos to be imported explicitly
-  val defaultTsv           = new CsvAttributes(delimiter = '\t')
-  val defaultCsvWithHeader = new CsvAttributes(hasHeader = true)
-  val defaultTsvWithHeader = new CsvAttributes(delimiter = '\t', hasHeader = true)
+  lazy val defaultTsv: CsvAttributes           = new CsvAttributes(delimiter = '\t')
+  lazy val defaultCsvWithHeader: CsvAttributes = new CsvAttributes(hasHeader = true)
+  lazy val defaultTsvWithHeader: CsvAttributes = new CsvAttributes(delimiter = '\t', hasHeader = true)
+  implicit val inferFromSchema: CsvAttributes = InferFromSchemaCsvAttributes
 
   def dropHeader[T](rdd: RDD[T])(implicit tt: ClassTag[T]) = {
     val dropFunc = new DropRDDFunctions(rdd)

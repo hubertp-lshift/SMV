@@ -39,11 +39,10 @@ class SmvDFHelper(df: DataFrame) {
    * @param schemaWithMeta Provide the companion schema (usually used when we need to persist some schema meta data along with the standard schema)
    */
   def saveAsCsvWithSchema(dataPath: String,
-                          ca: CsvAttributes = CsvAttributes.defaultCsv,
                           schemaWithMeta: SmvSchema = null,
-                          strNullValue: String = "") {
+                          strNullValue: String = "")(ca: CsvAttributes = CsvAttributes.defaultCsvAttributes) {
     val handler = new FileIOHandler(df.sparkSession, dataPath)
-    handler.saveAsCsvWithSchema(df, schemaWithMeta, ca, strNullValue)
+    handler.saveAsCsvWithSchema(df, schemaWithMeta, strNullValue)(ca)
   }
 
   def _smvDumpDF(): String = {
@@ -1214,7 +1213,7 @@ class SmvDFHelper(df: DataFrame) {
    **/
   def smvExportCsv(path: String, n: Integer = null) {
     val schema = SmvSchema.fromDataFrame(df)
-    val ca     = CsvAttributes.defaultCsv
+    val ca     = CsvAttributes.defaultCsvAttributes
 
     val schemaPath = SmvSchema.dataPathToSchemaPath(path)
     schema.saveToLocalFile(schemaPath)

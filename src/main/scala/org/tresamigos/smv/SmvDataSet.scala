@@ -213,7 +213,7 @@ abstract class SmvDataSet extends FilenamePart {
     util.DataSet.persist(app.sparkSession, rdd, moduleCsvPath(prefix), app.genEdd)
 
   private[smv] def readPersistedFile(prefix: String = ""): Try[DataFrame] =
-    Try(util.DataSet.readFile(app.sparkSession, moduleCsvPath(prefix)))
+    Try(util.DataSet.readFile(app.sparkSession, moduleCsvPath(prefix))(CsvAttributes.defaultCsvAttributes))
 
   private[smv] def computeRDD: DataFrame = {
     val dsDqm     = new DQMValidator(createDsDqm())
@@ -266,7 +266,7 @@ abstract class SmvDataSet extends FilenamePart {
   private[smv] def readPublishedData(): Option[DataFrame] = {
     stageVersion.map { v =>
       val handler = new FileIOHandler(app.sparkSession, publishPath(v))
-      handler.csvFileWithSchema()
+      handler.csvFileWithSchema(CsvAttributes.inferFromSchema)
     }
   }
 }
@@ -373,18 +373,18 @@ abstract class SmvFile extends SmvInputDataSet {
  */
 case class SmvCsvFile(
     override val path: String,
-    csvAttributes: Option[CsvAttributes] = None,
     override val schemaPath: String = null,
     override val isFullPath: Boolean = false
-) extends SmvFile
+)(implicit csvAttributes: CsvAttributes) extends SmvFile
     with SmvDSWithParser {
+  assert(csvAttributes != null)
 
   override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
     val parserValidator =
       if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
     // TODO: this should use inputDir instead of dataDir
     val handler = new FileIOHandler(app.sparkSession, fullPath, fullSchemaPath, parserValidator)
-    val df      = handler.csvFileWithSchema(csvAttributes)
+    val df      = handler.csvFileWithSchema
     run(df)
   }
 }
@@ -399,10 +399,11 @@ case class SmvCsvFile(
  **/
 class SmvMultiCsvFiles(
     dir: String,
-    csvAttributes: Option[CsvAttributes] = None,
     override val schemaPath: String = null
-) extends SmvFile
+)(implicit csvAttributes: CsvAttributes) extends SmvFile
     with SmvDSWithParser {
+
+  assert(csvAttributes != null)
 
   override val path = dir
 

@@ -36,13 +36,11 @@ private[smv] class FileIOHandler(
    * Create a DataFrame from the given data/schema path and CSV attributes.
    * If CSV attributes are null, then they are extracted from the schema file directly.
    */
-  private[smv] def csvFileWithSchema(
-      csvAttributes: Option[CsvAttributes] = None
-  ): DataFrame = {
+  private[smv] def csvFileWithSchema(implicit attributes: CsvAttributes): DataFrame = {
     val sc     = sparkSession.sparkContext
     val schema = SmvSchema.fromFile(sc, fullSchemaPath)
 
-    val ca = csvAttributes.getOrElse(schema.extractCsvAttributes())
+    val ca = attributes.fromSchema(schema)
 
     val strRDD    = sc.textFile(dataPath)
     val noHeadRDD = if (ca.hasHeader) CsvAttributes.dropHeader(strRDD) else strRDD
@@ -120,9 +118,8 @@ private[smv] class FileIOHandler(
   private[smv] def saveAsCsvWithSchema(
       df: DataFrame,
       schemaWithMeta: SmvSchema = null,
-      csvAttributes: CsvAttributes = CsvAttributes.defaultCsv,
       strNullValue: String = ""
-  ) {
+  )(implicit csvAttributes: CsvAttributes) {
 
     val schema = if (schemaWithMeta == null) { SmvSchema.fromDataFrame(df, strNullValue) } else {
       schemaWithMeta
@@ -155,7 +152,7 @@ private[smv] class FileIOHandler(
 /**
  * A non-generic wrapper class of opencsv.CSVParser.
  */
-private[smv] class CSVParserWrapper(ca: CsvAttributes) {
+private[smv] class CSVParserWrapper(implicit ca: CsvAttributes) {
   val parser = new CSVParser(ca.delimiter, ca.quotechar)
 
   // For Excel CSV formatted files unescape "" => " and suppress \ as an escape character.
@@ -185,7 +182,7 @@ private[smv] class CSVStringParser[U](
 
   /** Parse an Iterator[String], apply function "f", and return another Iterator */
   def parseCSV(iterator: Iterator[String])(implicit ca: CsvAttributes): Iterator[U] = {
-    val parser = new CSVParserWrapper(ca)
+    val parser = new CSVParserWrapper()
     val add: (Exception, String) => Unit = { (e, r) =>
       parserV.addWithReason(e, r)
     }

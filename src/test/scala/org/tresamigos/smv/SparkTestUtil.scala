@@ -237,7 +237,7 @@ trait SmvTestUtil extends SparkTestUtil {
   }
 
   def open(path: String) = {
-    val file = SmvCsvFile("./" + path, Some(CsvAttributes.defaultCsv))
+    val file = SmvCsvFile("./" + path)(CsvAttributes.defaultCsvAttributes)
     file.rdd
   }
 

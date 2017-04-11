@@ -112,8 +112,8 @@ package object shell {
   /**
    * Read in a Csv file as DF
    **/
-  def openCsv(path: String, ca: Option[CsvAttributes] = None, parserCheck: Boolean = false) =
-    ShellCmd.openCsv(path, ca, parserCheck)
+  def openCsv(path: String, parserCheck: Boolean = false)(implicit ca: CsvAttributes) =
+    ShellCmd.openCsv(path, parserCheck)
 
   /**
    * Resolve SmvDataSet
@@ -141,9 +141,8 @@ package object shell {
       n: Int = 100000,
       ca: CsvAttributes = CsvAttributes.defaultCsvWithHeader
   ) = {
-    implicit val csvAttributes = ca
     val helper                 = new SchemaDiscoveryHelper(SmvApp.app.sqlContext)
-    val schema                 = helper.discoverSchemaFromFile(path, n)
+    val schema                 = helper.discoverSchemaFromFile(path, n)(ca)
     val outpath                = SmvSchema.dataPathToSchemaPath(path) + ".toBeReviewed"
     val outFileName            = (new File(outpath)).getName
     schema.saveToLocalFile(outFileName)

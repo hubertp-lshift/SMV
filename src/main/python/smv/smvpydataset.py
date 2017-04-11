@@ -19,7 +19,7 @@ from pyspark import SparkContext
 from pyspark.sql import HiveContext, DataFrame
 from pyspark.sql.column import Column
 from pyspark.sql.functions import col
-from utils import smv_copy_array, wrap_in_scala_option
+from utils import smv_copy_array, default_csv_attributes
 
 import abc
 
@@ -293,7 +293,7 @@ class SmvCsvFile(SmvPyInput, WithParser):
 
     def __init__(self, smvPy):
         super(SmvCsvFile, self).__init__(smvPy)
-        attr = wrap_in_scala_option(smvPy._jvm, self.csvAttr())
+        attr = default_csv_attributes(smvPy._jvm, self.csvAttr())
         self._smvCsvFile = smvPy.j_smvPyClient.smvCsvFile(
             self.fqn(), self.path(), attr,
             self.forceParserCheck(), self.failAtParsingError())
@@ -324,12 +324,12 @@ class SmvMultiCsvFiles(SmvPyInput, WithParser):
 
     def __init__(self, smvPy):
         super(SmvMultiCsvFiles, self).__init__(smvPy)
-        attr = wrap_in_scala_option(smvPy._jvm, self.csvAttr())
+        attr = default_csv_attributes(smvPy._jvm, self.csvAttr())
         self._smvMultiCsvFiles = smvPy._jvm.org.tresamigos.smv.SmvMultiCsvFiles(
-            self.dir(),
-            attr,
-            None
-        )
+                                     self.dir(),
+                                     None,
+                                     attr
+                                 )
 
     def description(self):
         return "Input dir: @" + self.dir()

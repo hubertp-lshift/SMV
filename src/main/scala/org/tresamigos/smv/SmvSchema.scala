@@ -424,7 +424,7 @@ class SmvSchema(val entries: Seq[SchemaEntry], val attributes: Map[String, Strin
    * }}}
    * "has-header", "delimiter", and "quotechar" are all optional and will default to (true, ",", '"') respectively.
    */
-  private[smv] def extractCsvAttributes() = {
+  private[smv] def extractCsvAttributes(): CsvAttributes = {
     def strToChar(s: String): Char = {
       s match {
         case "\\t" => '\t' // map \t to tab
@@ -436,7 +436,7 @@ class SmvSchema(val entries: Seq[SchemaEntry], val attributes: Map[String, Strin
     val quotechar = strToChar(attributes.getOrElse("quote-char", "\""))
     val hasHeader = Try(attributes("has-header").toBoolean).getOrElse(true)
 
-    CsvAttributes(delimiter, quotechar, hasHeader)
+    new CsvAttributes(delimiter, quotechar, hasHeader)
   }
 
   /**

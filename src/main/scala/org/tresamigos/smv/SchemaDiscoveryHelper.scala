@@ -29,8 +29,8 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
    * @param ca the csv file attributes
    * @return the discovered schema
    */
-  private def getColumnNames(strRDD: RDD[String], ca: CsvAttributes): Array[String] = {
-    val parser = new CSVParserWrapper(ca)
+  private def getColumnNames(strRDD: RDD[String])(implicit ca: CsvAttributes): Array[String] = {
+    val parser = new CSVParserWrapper
 
     if (ca.hasHeader) {
       val columnNamesRowStr = strRDD.first()
@@ -158,11 +158,10 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
    * @param ca  the csv file attributes
    */
   private[smv] def discoverSchema(strRDD: RDD[String],
-                                  numLines: Int,
-                                  ca: CsvAttributes): SmvSchema = {
+                                  numLines: Int)(implicit ca: CsvAttributes): SmvSchema = {
     val parser = new CSVParser(ca.delimiter)
 
-    val columns = getColumnNames(strRDD, ca)
+    val columns = getColumnNames(strRDD)
 
     val noHeadRDD = if (ca.hasHeader) CsvAttributes.dropHeader(strRDD) else strRDD
 
@@ -214,9 +213,8 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
    * @param numLines the number of rows to process in order to discover the column types
    * @param ca the csv file attributes
    */
-  def discoverSchemaFromFile(dataPath: String, numLines: Int = 1000)(
-      implicit ca: CsvAttributes): SmvSchema = {
+  def discoverSchemaFromFile(dataPath: String, numLines: Int = 1000)(implicit ca: CsvAttributes): SmvSchema = {
     val strRDD = sqlContext.sparkContext.textFile(dataPath)
-    discoverSchema(strRDD, numLines, ca)
+    discoverSchema(strRDD, numLines)
   }
 }
