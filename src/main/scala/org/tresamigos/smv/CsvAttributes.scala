@@ -24,7 +24,7 @@ case class CsvAttributes(val delimiter: Char = ',',
 }
 
 object CsvAttributes {
-  implicit val defaultCsv = new CsvAttributes()
+  val defaultCsv = new CsvAttributes()
 
   // common CsvAttributes combos to be imported explicitly
   val defaultTsv           = new CsvAttributes(delimiter = '\t')

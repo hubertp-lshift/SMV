@@ -34,19 +34,19 @@ package object dqm {
 
   /** BoundRule requires `lower <= col < upper` */
   def BoundRule[T: Ordering](col: Column, lower: T, upper: T): DQMRule = {
-    DQMRule(col >= lower && col < upper, s"BoundRule(${col})", FailNone)
+    DQMRule(col >= lower && col < upper, Some(s"BoundRule(${col})"), FailNone)
   }
 
   /** SetRule requires `col in set` */
   def SetRule(col: Column, set: Set[Any]): DQMRule = {
-    DQMRule(col.isin(set.toSeq.map { lit(_) }: _*), s"SetRule(${col})", FailNone)
+    DQMRule(col.isin(set.toSeq.map { lit(_) }: _*), Some(s"SetRule(${col})"), FailNone)
   }
 
   /** SetFix to assign `default` if `col not in set` */
   def SetFix(col: Column, set: Set[Any], default: Any): DQMFix = {
     DQMFix(!col.isin(set.toSeq.map { lit(_) }: _*),
            lit(default) as col.getName,
-           s"SetFix(${col})",
+           Some(s"SetFix(${col})"),
            FailNone)
   }
 
@@ -55,7 +55,7 @@ package object dqm {
     val check = udf({ s: String =>
       s.matches(fmt)
     })
-    DQMRule(check(col), s"FormatRule(${col})", FailNone)
+    DQMRule(check(col), Some(s"FormatRule(${col})"), FailNone)
   }
 
   /** FormatFix to assign `default` if `col does not match fmt` */
@@ -63,6 +63,6 @@ package object dqm {
     val check = udf({ s: String =>
       s.matches(fmt)
     })
-    DQMFix(!check(col), lit(default) as col.getName, s"FormatFix(${col})", FailNone)
+    DQMFix(!check(col), lit(default) as col.getName, Some(s"FormatFix(${col})"), FailNone)
   }
 }

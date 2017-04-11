@@ -25,10 +25,10 @@ import scala.annotation.meta.param
 import scala.collection.JavaConverters._
 
 /**
- * DQMState keeps tracking of [[org.tresamigos.smv.dqm.DQMTask]] behavior on a DF
+ * DQMState keeps track of [[org.tresamigos.smv.dqm.DQMTask]] behavior on a DF
  *
- * Since the logs are implemented with Aggregators, it need a SparkContext to construct.
- * A list of DQMRule names and a list of DQMFix names are needed also.
+ * Since the logs are implemented with Aggregators, it needs a SparkContext to construct.
+ * A list of DQMRule names and a list of DQMFix names are needed as well.
  **/
 class DQMState(
     @(transient @param) sc: SparkContext,

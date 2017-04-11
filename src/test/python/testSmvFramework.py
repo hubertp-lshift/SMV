@@ -15,7 +15,7 @@ import unittest
 
 from smvbasetest import SmvBaseTest
 from smv import *
-from smv.dqm import *
+from smv.dqm import DQMRule, DQMFix, FailTotalRuleCountPolicy, FailTotalFixCountPolicy
 
 import pyspark
 from pyspark.context import SparkContext

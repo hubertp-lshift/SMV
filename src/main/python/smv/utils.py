@@ -82,3 +82,9 @@ def check_socket(port):
             res = True
 
     return res
+
+def wrap_in_scala_option(jvmref, v):
+    if v is None:
+        return jvmref.scala.Option.empty()
+    else:
+        return jvmref.scala.Option.apply(v)

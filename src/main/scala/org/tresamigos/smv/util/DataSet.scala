@@ -34,7 +34,7 @@ object DataSet {
    */
   def readFile(sparkSession: SparkSession,
                path: String,
-               attr: CsvAttributes = CsvAttributes.defaultCsv): DataFrame =
+               attr: Option[CsvAttributes] = Some(CsvAttributes.defaultCsv)): DataFrame =
     new FileIOHandler(sparkSession, path).csvFileWithSchema(attr)
 
   /**

@@ -6,7 +6,7 @@ import org.apache.spark.sql.functions._
 class CsvTest extends SmvTestUtil {
 
   test("Test loading of csv file with header") {
-    val file = SmvCsvFile("./" + testDataDir + "CsvTest/test1", CsvAttributes.defaultCsvWithHeader)
+    val file = SmvCsvFile("./" + testDataDir + "CsvTest/test1", Some(CsvAttributes.defaultCsvWithHeader))
     val df   = file.rdd
     import df.sparkSession.implicits._
     val res = df.map(r => (r.getString(0), r.getInt(1))).collect.mkString(",")
@@ -27,7 +27,7 @@ class CsvTest extends SmvTestUtil {
   test("Test run method in SmvFile") {
     object TestFile
         extends SmvCsvFile("./" + testDataDir + "CsvTest/test1",
-                           CsvAttributes.defaultCsvWithHeader) {
+                           Some(CsvAttributes.defaultCsvWithHeader)) {
       override def run(df: DataFrame) = {
         import df.sqlContext.implicits._
         df.smvSelectPlus(smvStrCat($"name", $"id") as "name_id")
@@ -134,7 +134,7 @@ class CsvTest extends SmvTestUtil {
     val csvPathCaret = testcaseTempDir + "/test_escape_caret.csv"
 
     df.saveAsCsvWithSchema(csvPathCaret, ca)
-    val file = SmvCsvFile("./" + csvPathCaret, ca)
+    val file = SmvCsvFile("./" + csvPathCaret, Some(ca))
     dfOut = file.rdd
 
     assertDataFramesEqual(df, dfOut)

@@ -16,6 +16,7 @@ This module defines the abstract classes which formed the SmvDataSet Framework f
 """
 
 from smv.smvpy import smvPy
+from smv.utils import wrap_in_scala_option
 import traceback
 
 def SmvDQM():
@@ -53,8 +54,10 @@ def FailPercent(threshold):
 
 def DQMRule(rule, name = None, taskPolicy = None):
     task = taskPolicy or FailNone()
-    return smvPy._jvm.DQMRule(rule._jc, name, task)
+    name1 = wrap_in_scala_option(smvPy._jvm, name)
+    return smvPy._jvm.DQMRule(rule._jc, name1, task)
 
 def DQMFix(condition, fix, name = None, taskPolicy = None):
     task = taskPolicy or FailNone()
-    return smvPy._jvm.DQMFix(condition._jc, fix._jc, name, task)
+    name1 = wrap_in_scala_option(smvPy._jvm, name)
+    return smvPy._jvm.DQMFix(condition._jc, fix._jc, name1, task)
