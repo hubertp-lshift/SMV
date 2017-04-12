@@ -65,7 +65,7 @@ object myfile extends SmvCsvFile("accounts/acct_demo.csv") {
 
 **Python**
 ```python
-class Myfile(SmvPyCsvFile):
+class Myfile(SmvCsvFile):
     def path(self):
         return "accounts/acct_demo.csv"
     def failAtParsingError(self):
@@ -75,9 +75,9 @@ class Myfile(SmvPyCsvFile):
 With above setting, the `SmvFile` will simply persist the validation result and keep moving.
 
 Either terminating the process or not, as long as the log is nontrivial, it will be printed to
-console and persisted in the `SmvModule` persisted data path with postfix `.valid`.
+console and persisted in the `SmvModule` persisted data path with suffix `.valid`.
 
-Sometimes we need more flexibility on specifying the terminate criterial. For example, I can tolerate
+Sometimes we need more flexibility on specifying the terminate criteria. For example, I can tolerate
 less than 10 parser errors, if more than that, terminate. Here is an example of how to specify that,
 
 **Scala**
@@ -94,7 +94,7 @@ object myfile extends SmvCsvFile("accounts/acct_demo.csv") {
 ```python
 from smv.dqm import *
 ...
-class Myfile(SmvPyCsvFile):
+class Myfile(SmvCsvFile):
     def path(self):
         return "accounts/acct_demo.csv"
     def failAtParsingError(self):
@@ -103,23 +103,23 @@ class Myfile(SmvPyCsvFile):
         return SmvDQM().add(FailParserCountPolicy(10))
 ```
 
-Please refer the `DQMPolicy` session below.
+Please refer to the `DQMPolicy` session below.
 
 ## DQM
 
-Although the parser enforced data schema, there are typically more things need to be checked on
+Apart from the parser enforced data schema, there are typically more things needed to be checked on
 real-world data. Here are some examples,
 
 * `Age` should be between 0 and 120
 * `Gender` should only have 3 values `m`, `f`, and `o`
 * `Price` should be between 0.01 and 1,000,000.00
 
-Record by record, above rules could be checked, and depend on the need, they can be fixed.
+Record by record, above rules could be checked, and depending on the need, they can be fixed.
 The `SmvDQM` framework provides `Rule`s and `Fix`es to address them.
 
 ### DQMRule & DQMFix
 
-Since `dqm` is a sub-package, to use it one need to
+Since `dqm` is a sub-package, to use it one needs to
 **Scala**
 ```scala
 import org.tresamigos.smv.dqm._

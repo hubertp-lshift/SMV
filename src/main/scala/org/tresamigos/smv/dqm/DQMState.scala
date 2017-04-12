@@ -185,12 +185,10 @@ private[smv] class RejectLogger(sparkContext: SparkContext,
         }
         localCounter = localCounter + 1
         rejectedRecordCount add 1
-        Unit
       }
   }
 
-  def report: (Int, List[String]) = {
+  def report: (Int, List[String]) =
     (rejectedRecordCount.value, rejectedRecords.value.asScala.toList)
-  }
 
 }

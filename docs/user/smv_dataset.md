@@ -39,7 +39,7 @@ In generall, all the Input types need to
 Some input can't guarantee data quality, so a Data Quality Module (dqm) also need to be
 specified.
 
-### SmvCsvFile (Python: *SmvPyCsvFile*)
+### SmvCsvFile
 
 An `SmvCsvFile` is an input `SmvDataSet`, which user can point it to some Csv file and its schema
 file. Please refer [Csv File handling](smv_file.md) for details about the storage of the file,
@@ -54,7 +54,7 @@ object AcctDemo extends SmvCsvFile("accounts/acct_demo.csv", CA.caBar) {
 
 **Python**
 ```python
-class AcctDemo(SmvPyCsvFile):
+class AcctDemo(SmvCsvFile):
     def path(self):
         return "accounts/acct_demo.csv"
 

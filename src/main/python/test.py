@@ -2,7 +2,7 @@ from smv import *
 from pyspark.sql.functions import col
 from pyspark.sql import DataFrame
 
-class InputZipCounty(SmvPyCsvFile):
+class InputZipCounty(SmvCsvFile):
     def path(self):
         return "pdda_raw/00_geo/zip_to_county.csv"
 

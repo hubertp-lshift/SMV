@@ -25,12 +25,14 @@ abstract class DQMPolicy {
   def policy(df: DataFrame, state: DQMState): Boolean
 }
 
-case class UDPolicy(_policy: (DataFrame, DQMState) => Boolean, name: String) extends DQMPolicy {
-  def policy(df: DataFrame, state: DQMState) = _policy(df, state)
-}
-
 object DQMPolicy {
-  def apply(policy: (DataFrame, DQMState) => Boolean, name: String) =
+
+  private case class UDPolicy(_policy: (DataFrame, DQMState) => Boolean, name: String)
+      extends DQMPolicy {
+    def policy(df: DataFrame, state: DQMState) = _policy(df, state)
+  }
+
+  def apply(policy: (DataFrame, DQMState) => Boolean, name: String): DQMPolicy =
     UDPolicy(policy, name)
 }
 

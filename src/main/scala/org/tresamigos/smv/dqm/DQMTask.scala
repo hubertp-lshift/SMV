@@ -35,7 +35,7 @@ case object FailAny extends DQMTaskPolicy {
 }
 
 /** For access by Python modules */
-object DqmTaskPolicies {
+object DqmTaskPolicy {
   val failNone: DQMTaskPolicy = FailNone
   val failAny: DQMTaskPolicy  = FailAny
 }

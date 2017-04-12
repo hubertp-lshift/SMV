@@ -34,15 +34,15 @@ import org.apache.spark.annotation.Experimental
  * }}}
  **/
 @Experimental
-abstract class SmvGDO extends Serializable {
+sealed abstract class SmvGDO extends Serializable {
   def inGroupKeys: Seq[String]
   def createInGroupMapping(smvSchema: StructType): Iterable[InternalRow] => Iterable[InternalRow]
   def createOutSchema(inSchema: StructType): StructType
 }
 
 object SmvGDO {
-  def orderColsToOrdering(inSchema: StructType,
-                          orderCols: Seq[Expression]): Ordering[InternalRow] = {
+  protected[cds] def orderColsToOrdering(inSchema: StructType,
+                                         orderCols: Seq[Expression]): Ordering[InternalRow] = {
     val keyOrderPair: Seq[(NamedExpression, SortDirection)] = orderCols.map { c =>
       c match {
         case SortOrder(e: NamedExpression, direction, nullOrdering) => (e, direction)

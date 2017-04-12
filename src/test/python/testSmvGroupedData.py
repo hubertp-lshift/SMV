@@ -14,7 +14,6 @@
 import unittest
 
 from smvbasetest import SmvBaseTest
-from smv import SmvPyCsvFile
 
 import pyspark
 from pyspark.context import SparkContext

@@ -14,14 +14,14 @@
 import unittest
 
 from smvbasetest import SmvBaseTest
-from smv import smvPy, SmvPyCsvFile
+from smv import smvPy, SmvCsvFile
 
 import pyspark
 from pyspark.context import SparkContext
 from pyspark.sql import SQLContext, HiveContext
 from pyspark.sql.functions import col, struct
 
-class T(SmvPyCsvFile):
+class T(SmvCsvFile):
     @classmethod
     def path(cls):
         return "./target/python-test-export-csv.csv"

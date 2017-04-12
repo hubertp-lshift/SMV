@@ -40,10 +40,10 @@ def FailTotalFixPercentPolicy(threshold):
 
 # DQM task policies
 def FailNone():
-    return smvPy._jvm.DqmTaskPolicies.failNone()
+    return smvPy._jvm.DqmTaskPolicy.failNone()
 
 def FailAny():
-    return smvPy._jvm.DqmTaskPolicies.failAny()
+    return smvPy._jvm.DqmTaskPolicy.failAny()
 
 def FailCount(threshold):
     return smvPy._jvm.FailCount(threshold)
