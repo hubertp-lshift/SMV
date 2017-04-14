@@ -20,7 +20,7 @@ from py4j.java_gateway import java_import, JavaObject
 
 from pyspark import SparkContext
 from pyspark.sql import HiveContext, DataFrame
-from utils import for_name, smv_copy_array, check_socket
+from utils import for_name, smv_copy_array, check_socket, wrap_in_scala_option
 from error import SmvRuntimeError
 
 import inspect
@@ -155,6 +155,12 @@ class SmvApp(object):
     def urn2fqn(self, urnOrFqn):
         """Extracts the SMV module FQN portion from its URN; if it's already an FQN return it unchanged"""
         return self.j_smvPyClient.urn2fqn(urnOrFqn)
+
+    def dfFrom(self, schema, data = None):
+        """Create a DataFrame from string for temporary use. A schema is mandatory, but passing None
+        for data will create an empty DataFrame"""
+        data1 = wrap_in_scala_option(self._jvm, data)
+        return self.j_smvPyClient.dfFrom(schema, data1)
 
     def outputDir(self):
         return self.j_smvPyClient.outputDir()

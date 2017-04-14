@@ -62,11 +62,18 @@ class SmvApp(private val cmdLineArgs: Seq[String],
    * Create a DataFrame from string for temporary use (in test or shell)
    * By default, don't persist validation result
    *
-   * Passing null for data will create an empty dataframe with a specified schema.
+   * Passing None for data will create an empty dataframe with a specified schema.
    **/
-  def createDF(schemaStr: String, data: String = null, isPersistValidateResult: Boolean = false) = {
+  def createDF(schemaStr: String,
+               data: Option[String] = None,
+               isPersistValidateResult: Boolean = false): DataFrame = {
     val smvCF = SmvCsvStringData(schemaStr, data, isPersistValidateResult)
     smvCF.rdd
+  }
+
+  def createDF(schemaStr: String, data: String): DataFrame = {
+    assert(data != null)
+    createDF(schemaStr, Some(data))
   }
 
   lazy val allDataSets = dsm.allDataSets

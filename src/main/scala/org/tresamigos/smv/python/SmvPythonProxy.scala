@@ -215,7 +215,7 @@ class SmvPyClient(val j_smvApp: SmvApp) {
   def outputDir: String = j_smvApp.smvConfig.outputDir
 
   /** Used to create small dataframes for testing */
-  def dfFrom(schema: String, data: String): DataFrame =
+  def dfFrom(schema: String, data: Option[String]): DataFrame =
     j_smvApp.createDF(schema, data)
 
   def urn2fqn(modUrn: String): String = org.tresamigos.smv.urn2fqn(modUrn)

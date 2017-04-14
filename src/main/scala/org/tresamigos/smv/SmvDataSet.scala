@@ -155,7 +155,7 @@ abstract class SmvDataSet extends FilenamePart {
    * dynamically loading the same SmvDataSet.
    * Note: the RDD graph is cached and NOT the data (i.e. rdd.cache is NOT called here)
    */
-  def rdd() = {
+  def rdd(): DataFrame = {
     if (!app.dfCache.contains(versionedFqn)) {
       app.dfCache = app.dfCache + (versionedFqn -> computeRDD)
     }
@@ -712,10 +712,22 @@ object SmvExtModulePython {
  **/
 case class SmvCsvStringData(
     schemaStr: String,
-    data: String,
-    override val isPersistValidateResult: Boolean = false
+    data: Option[String],
+    override val isPersistValidateResult: Boolean
 ) extends SmvInputDataSet
     with SmvDSWithParser {
+
+  // Safe-guards against Python code
+  assert(schemaStr != null && data.map(_ != null).getOrElse(true),
+         s"Data string for schema $schemaStr must not be null")
+
+  def this(schemaStr: String, data: String) {
+    this(schemaStr, Some(data), isPersistValidateResult = false)
+  }
+
+  def this(schemaStr: String, data: String, isPersistValidateResult: Boolean) {
+    this(schemaStr, Some(data), isPersistValidateResult)
+  }
 
   override def description() = s"Dummy module to create DF from strings"
 
@@ -727,7 +739,7 @@ case class SmvCsvStringData(
 
   override def doRun(dsDqm: DQMValidator): DataFrame = {
     val schema    = SmvSchema.fromString(schemaStr)
-    val dataArray = if (null == data) Array.empty[String] else data.split(";").map(_.trim)
+    val dataArray = data.map(_.split(";").map(_.trim)).getOrElse(Array.empty[String])
 
     val parserValidator =
       if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
