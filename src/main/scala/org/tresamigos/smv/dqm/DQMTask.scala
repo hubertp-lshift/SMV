@@ -19,7 +19,7 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.catalyst.expressions.Alias
 import org.apache.spark.sql.functions.{lit, udf, when}
 
-/** Each DQMTask (DQMRule/DQMFix) need to have a DQMTaskPolicy */
+/** Each DQMTask (DQMRule/DQMFix) needs to have a DQMTaskPolicy */
 sealed abstract class DQMTaskPolicy {
   private[smv] def createPolicy(name: String): DQMPolicy
 }
