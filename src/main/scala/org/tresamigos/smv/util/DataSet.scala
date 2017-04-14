@@ -32,10 +32,8 @@ object DataSet {
    * The default format is headerless CSV with '"' as the quote
    * character
    */
-  def readFile(sqlContext: SQLContext,
-               path: String,
-               attr: Option[CsvAttributes] = Some(CsvAttributes.defaultCsv)): DataFrame =
-    new FileIOHandler(sqlContext, path).csvFileWithSchema(attr)
+  def readFile(sqlContext: SQLContext, path: String)(implicit attr: CsvAttributes = CsvAttributes.defaultCsvAttributes): DataFrame =
+    new FileIOHandler(sqlContext, path).csvFileWithSchema
 
   /**
    * Save the dataframe content to disk, optionally generate edd.

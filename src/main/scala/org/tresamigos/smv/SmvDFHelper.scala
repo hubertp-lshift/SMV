@@ -38,12 +38,12 @@ class SmvDFHelper(df: DataFrame) {
    * @param ca CSV attributes used to format output file.  Defaults to `CsvAttributes.defaultCsv`
    * @param schemaWithMeta Provide the companion schema (usually used when we need to persist some schema meta data along with the standard schema)
    */
-  def saveAsCsvWithSchema(dataPath: String,
-                          ca: CsvAttributes = CsvAttributes.defaultCsv,
-                          schemaWithMeta: SmvSchema = null,
-                          strNullValue: String = "") {
+  def saveAsCsvWithSchema(
+      dataPath: String,
+      schemaWithMeta: SmvSchema = null,
+      strNullValue: String = "")(implicit ca: CsvAttributes = CsvAttributes.defaultCsvAttributes) {
     val handler = new FileIOHandler(df.sqlContext, dataPath)
-    handler.saveAsCsvWithSchema(df, schemaWithMeta, ca, strNullValue)
+    handler.saveAsCsvWithSchema(df, schemaWithMeta, strNullValue)
   }
 
   def _smvDumpDF(): String = {
@@ -1215,7 +1215,7 @@ class SmvDFHelper(df: DataFrame) {
    **/
   def smvExportCsv(path: String, n: Integer = null) {
     val schema = SmvSchema.fromDataFrame(df)
-    val ca     = CsvAttributes.defaultCsv
+    val ca     = CsvAttributes.defaultCsvAttributes
 
     val schemaPath = SmvSchema.dataPathToSchemaPath(path)
     schema.saveToLocalFile(schemaPath)

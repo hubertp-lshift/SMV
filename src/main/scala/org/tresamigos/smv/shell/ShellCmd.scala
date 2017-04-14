@@ -156,17 +156,17 @@ object ShellCmd {
   /**
    * Read in a Csv file as DF
   **/
-  def openCsv(path: String, ca: Option[CsvAttributes], parserCheck: Boolean): DataFrame = {
+  def openCsv(path: String, parserCheck: Boolean)(implicit ca: CsvAttributes): DataFrame = {
 
     /** isFullPath = true to avoid prepending data_dir */
-    object file extends SmvCsvFile(path, ca, null, true) {
+    object file extends SmvCsvFile(path, null, true) {
       override val forceParserCheck   = false
       override val failAtParsingError = parserCheck
     }
     file.rdd()
   }
 
-  def openCsv(path: String): DataFrame = openCsv(path, None, false)
+  def openCsv(path: String): DataFrame = openCsv(path, false)
 
   /**
    * Resolve SmvDataSet

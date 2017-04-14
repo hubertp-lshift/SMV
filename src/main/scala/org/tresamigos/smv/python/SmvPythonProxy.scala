@@ -200,14 +200,16 @@ class SmvPyClient(val j_smvApp: SmvApp) {
   /** Create a SmvCsvFile for use in Python */
   def smvCsvFile(moduleName: String,
                  path: String,
-                 csvAttr: Option[CsvAttributes],
+                 csvAttr: CsvAttributes,
                  pForceParserCheck: Boolean,
-                 pFailAtParsingError: Boolean): SmvCsvFile =
-    new SmvCsvFile(path, csvAttr) {
+                 pFailAtParsingError: Boolean): SmvCsvFile = {
+    assert(csvAttr != null)
+    new SmvCsvFile(path)(csvAttr) {
       override def fqn                = moduleName
       override val forceParserCheck   = pForceParserCheck
       override val failAtParsingError = pFailAtParsingError
     }
+  }
 
   /** Output directory for files */
   def outputDir: String = j_smvApp.smvConfig.outputDir

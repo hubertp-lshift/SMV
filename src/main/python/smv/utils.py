@@ -91,3 +91,9 @@ def wrap_in_scala_option(jvmref, v):
         return jvmref.scala.Option.empty()
     else:
         return jvmref.scala.Option.apply(v)
+
+def default_csv_attributes(jvmref, v):
+    if v is None:
+        return jvmref.org.tresamigos.smv.CsvAttributes.inferFromSchema()
+    else:
+        return v

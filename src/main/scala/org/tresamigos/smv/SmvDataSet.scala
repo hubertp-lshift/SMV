@@ -215,7 +215,8 @@ abstract class SmvDataSet extends FilenamePart {
     util.DataSet.persist(app.sqlContext, rdd, moduleCsvPath(prefix), app.genEdd)
 
   private[smv] def readPersistedFile(prefix: String = ""): Try[DataFrame] =
-    Try(util.DataSet.readFile(app.sqlContext, moduleCsvPath(prefix)))
+    Try(
+      util.DataSet.readFile(app.sqlContext, moduleCsvPath(prefix)))
 
   private[smv] def computeRDD: DataFrame = {
     val dsDqm     = new DQMValidator(createDsDqm())
@@ -268,7 +269,7 @@ abstract class SmvDataSet extends FilenamePart {
   private[smv] def readPublishedData(): Option[DataFrame] = {
     stageVersion.map { v =>
       val handler = new FileIOHandler(app.sqlContext, publishPath(v))
-      handler.csvFileWithSchema()
+      handler.csvFileWithSchema
     }
   }
 }
@@ -375,11 +376,12 @@ abstract class SmvFile extends SmvInputDataSet {
  */
 case class SmvCsvFile(
     override val path: String,
-    csvAttributes: Option[CsvAttributes] = None,
     override val schemaPath: String = null,
     override val isFullPath: Boolean = false
-) extends SmvFile
+)(implicit csvAttributes: CsvAttributes)
+    extends SmvFile
     with SmvDSWithParser {
+  assert(csvAttributes != null)
 
   override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
     val parserValidator =
@@ -401,10 +403,11 @@ case class SmvCsvFile(
  **/
 class SmvMultiCsvFiles(
     dir: String,
-    csvAttributes: Option[CsvAttributes] = None,
     override val schemaPath: String = null
-) extends SmvFile
+)(implicit csvAttributes: CsvAttributes)
+    extends SmvFile
     with SmvDSWithParser {
+  assert(csvAttributes != null)
 
   override val path = dir
 
@@ -610,8 +613,10 @@ class SmvModuleLink(val outputModule: SmvOutput)
   /**
    * SmvModuleLinks should not cache or validate their data
    */
-  override def computeRDD = throw new SmvRuntimeException("SmvModuleLink computeRDD should never be called")
-  override private[smv] def doRun(dsDqm: DQMValidator) = throw new SmvRuntimeException("SmvModuleLink doRun should never be called")
+  override def computeRDD =
+    throw new SmvRuntimeException("SmvModuleLink computeRDD should never be called")
+  override private[smv] def doRun(dsDqm: DQMValidator) =
+    throw new SmvRuntimeException("SmvModuleLink doRun should never be called")
 
   /**
    * "Running" a link requires that we read the published output from the upstream `DataSet`.
@@ -727,7 +732,7 @@ case class SmvCsvStringData(
     val parserValidator =
       if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
     val handler = new FileIOHandler(app.sqlContext, null, None, parserValidator)
-    handler.csvStringRDDToDF(app.sc.makeRDD(dataArray), schema, schema.extractCsvAttributes())
+    handler.csvStringRDDToDF(app.sc.makeRDD(dataArray), schema)(schema.extractCsvAttributes())
   }
 }
 
