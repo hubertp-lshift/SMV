@@ -66,26 +66,25 @@ class SmvDQM(
     private[smv] val fixes: Seq[DQMFix] = Nil,
     private[smv] val policies: Seq[DQMPolicy] = Nil,
     val needAction: Boolean = false
-) {
+) { self =>
 
-  def add(rule: DQMRule): SmvDQM = {
-    val newRules = rules :+ rule
-    new SmvDQM(newRules, fixes, policies, true)
-  }
+  def add(rule: DQMRule): SmvDQM =
+    copy(rules = rules :+ rule, needAction = true)
 
-  def add(fix: DQMFix): SmvDQM = {
-    val newFixes = fixes :+ fix
-    new SmvDQM(rules, newFixes, policies, true)
-  }
+  def add(fix: DQMFix): SmvDQM =
+    copy(fixes = fixes :+ fix, needAction = true)
 
-  def add(policy: DQMPolicy): SmvDQM = {
-    val newPolicies = policies :+ policy
-    new SmvDQM(rules, fixes, newPolicies, needAction)
-  }
+  def add(policy: DQMPolicy): SmvDQM =
+    copy(policies = policies :+ policy)
 
-  def addAction(): SmvDQM = {
-    new SmvDQM(rules, fixes, policies, true)
-  }
+  def addAction(): SmvDQM =
+    copy(needAction = true)
+
+  private[this] def copy(rules: Seq[DQMRule] = self.rules,
+                         fixes: Seq[DQMFix] = self.fixes,
+                         policies: Seq[DQMPolicy] = self.policies,
+                         needAction: Boolean = self.needAction): SmvDQM =
+    new SmvDQM(rules, fixes, policies, needAction)
 
 }
 
