@@ -15,8 +15,7 @@
 package org.tresamigos.smv
 
 import org.apache.spark.sql.DataFrame
-
-import dqm.{DQMValidator, SmvDQM, TerminateParserLogger, FailParserCountPolicy}
+import dqm.{DQMValidator, FailParserCountPolicy, SmvDQM, TerminateParserLogger}
 
 import scala.collection.JavaConversions._
 import scala.util.Try
@@ -215,8 +214,7 @@ abstract class SmvDataSet extends FilenamePart {
     util.DataSet.persist(app.sqlContext, rdd, moduleCsvPath(prefix), app.genEdd)
 
   private[smv] def readPersistedFile(prefix: String = ""): Try[DataFrame] =
-    Try(
-      util.DataSet.readFile(app.sqlContext, moduleCsvPath(prefix)))
+    Try(util.DataSet.readFile(app.sqlContext, moduleCsvPath(prefix)))
 
   private[smv] def computeRDD: DataFrame = {
     val dsDqm     = new DQMValidator(createDsDqm())
@@ -327,8 +325,8 @@ trait SmvDSWithParser extends SmvDataSet {
 
 abstract class SmvFile extends SmvInputDataSet {
   val path: String
-  val schemaPath: String     = null
-  override def description() = s"Input file: @${path}"
+  val schemaPath: Option[String] = None
+  override def description()     = s"Input file: @${path}"
 
   private[smv] def isFullPath: Boolean = false
 
@@ -346,10 +344,7 @@ abstract class SmvFile extends SmvInputDataSet {
    */
   private[smv] def fullPath = findFullPath(path)
 
-  private[smv] def fullSchemaPath = {
-    if (schemaPath == null) None
-    else Option(findFullPath(schemaPath))
-  }
+  private[smv] def fullSchemaPath = schemaPath.map(findFullPath)
 
   /* For SmvFile, the datasetHash should be based on
    *  - raw class code crc
@@ -376,7 +371,7 @@ abstract class SmvFile extends SmvInputDataSet {
  */
 case class SmvCsvFile(
     override val path: String,
-    override val schemaPath: String = null,
+    override val schemaPath: Option[String] = None,
     override val isFullPath: Boolean = false
 )(implicit csvAttributes: CsvAttributes)
     extends SmvFile
@@ -403,7 +398,7 @@ case class SmvCsvFile(
  **/
 class SmvMultiCsvFiles(
     dir: String,
-    override val schemaPath: String = null
+    override val schemaPath: Option[String] = None
 )(implicit csvAttributes: CsvAttributes)
     extends SmvFile
     with SmvDSWithParser {
@@ -411,10 +406,9 @@ class SmvMultiCsvFiles(
 
   override val path = dir
 
-  override def fullSchemaPath = {
-    if (schemaPath == null) Option(SmvSchema.dataPathToSchemaPath(fullPath))
-    else Option(findFullPath(schemaPath))
-  }
+  override def fullSchemaPath =
+    if (schemaPath.isEmpty) Some(SmvSchema.dataPathToSchemaPath(fullPath))
+    else super.fullSchemaPath
 
   override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
     val parserValidator =
@@ -440,7 +434,7 @@ class SmvMultiCsvFiles(
 
 case class SmvFrlFile(
     override val path: String,
-    override val schemaPath: String = null,
+    override val schemaPath: Option[String] = None,
     override val isFullPath: Boolean = false
 ) extends SmvFile
     with SmvDSWithParser {

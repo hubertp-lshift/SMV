@@ -327,7 +327,7 @@ class SmvMultiCsvFiles(SmvPyInput, WithParser):
         attr = default_csv_attributes(smvApp._jvm, self.csvAttr())
         self._smvMultiCsvFiles = smvApp._jvm.org.tresamigos.smv.SmvMultiCsvFiles(
             self.dir(),
-            None,
+            smvApp._jvm.scala.Option.empty(),
             attr)
 
     def description(self):
