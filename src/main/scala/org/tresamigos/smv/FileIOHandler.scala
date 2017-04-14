@@ -40,12 +40,12 @@ private[smv] class FileIOHandler(
    * If CSV attributes are null, then they are extracted from the schema file directly.
    */
   private[smv] def csvFileWithSchema(
-      csvAttributes: CsvAttributes
+      csvAttributes: Option[CsvAttributes] = None
   ): DataFrame = {
     val sc     = sqlContext.sparkContext
     val schema = SmvSchema.fromFile(sc, fullSchemaPath)
 
-    val ca = if (csvAttributes == null) schema.extractCsvAttributes() else csvAttributes
+    val ca = csvAttributes.getOrElse(schema.extractCsvAttributes())
 
     val strRDD    = sc.textFile(dataPath)
     val noHeadRDD = if (ca.hasHeader) CsvAttributes.dropHeader(strRDD) else strRDD

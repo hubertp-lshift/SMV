@@ -59,7 +59,7 @@ object ShellCmd {
       |* ancestors(dsName: String)
       |* descendants(dsName: String)
       |* peek(df: DataFrame, pos: Int = 1)
-      |* openCsv(path: String, ca: CsvAttributes = null, parserCheck: Boolean = false)
+      |* openCsv(path: String, ca: Option[CsvAttributes] = None, parserCheck: Boolean = false)
       |* openHive(tabelName: String)
       |* now
       |* df(ds: SmvDataSet)
@@ -156,7 +156,7 @@ object ShellCmd {
   /**
    * Read in a Csv file as DF
   **/
-  def openCsv(path: String, ca: CsvAttributes, parserCheck: Boolean): DataFrame = {
+  def openCsv(path: String, ca: Option[CsvAttributes], parserCheck: Boolean): DataFrame = {
 
     /** isFullPath = true to avoid prepending data_dir */
     object file extends SmvCsvFile(path, ca, null, true) {
@@ -166,7 +166,7 @@ object ShellCmd {
     file.rdd()
   }
 
-  def openCsv(path: String): DataFrame = openCsv(path, null, false)
+  def openCsv(path: String): DataFrame = openCsv(path, None, false)
 
   /**
    * Resolve SmvDataSet

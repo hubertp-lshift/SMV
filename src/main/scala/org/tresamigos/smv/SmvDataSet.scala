@@ -268,7 +268,7 @@ abstract class SmvDataSet extends FilenamePart {
   private[smv] def readPublishedData(): Option[DataFrame] = {
     stageVersion.map { v =>
       val handler = new FileIOHandler(app.sqlContext, publishPath(v))
-      handler.csvFileWithSchema(null)
+      handler.csvFileWithSchema()
     }
   }
 }
@@ -375,7 +375,7 @@ abstract class SmvFile extends SmvInputDataSet {
  */
 case class SmvCsvFile(
     override val path: String,
-    csvAttributes: CsvAttributes = null,
+    csvAttributes: Option[CsvAttributes] = None,
     override val schemaPath: String = null,
     override val isFullPath: Boolean = false
 ) extends SmvFile
@@ -401,7 +401,7 @@ case class SmvCsvFile(
  **/
 class SmvMultiCsvFiles(
     dir: String,
-    csvAttributes: CsvAttributes = null,
+    csvAttributes: Option[CsvAttributes] = None,
     override val schemaPath: String = null
 ) extends SmvFile
     with SmvDSWithParser {

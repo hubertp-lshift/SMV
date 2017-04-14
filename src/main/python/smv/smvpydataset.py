@@ -19,7 +19,7 @@ from pyspark import SparkContext
 from pyspark.sql import HiveContext, DataFrame
 from pyspark.sql.column import Column
 from pyspark.sql.functions import col
-from utils import smv_copy_array
+from utils import smv_copy_array, wrap_in_scala_option
 
 import abc
 
@@ -68,6 +68,7 @@ def _stripComments(code):
     import re
     code = str(code)
     return re.sub(r'(?m)^ *(#.*\n?|[ \t]*\n)', '', code)
+
 
 class SmvOutput(object):
     """Mixin which marks an SmvModule as one of the output of its stage
@@ -292,8 +293,9 @@ class SmvCsvFile(SmvPyInput, WithParser):
 
     def __init__(self, smvApp):
         super(SmvCsvFile, self).__init__(smvApp)
+        attr = wrap_in_scala_option(smvApp._jvm, self.csvAttr())
         self._smvCsvFile = smvApp.j_smvPyClient.smvCsvFile(
-            self.fqn(), self.path(), self.csvAttr(),
+            self.fqn(), self.path(), attr,
             self.forceParserCheck(), self.failAtParsingError())
 
     def description(self):
@@ -322,9 +324,10 @@ class SmvMultiCsvFiles(SmvPyInput, WithParser):
 
     def __init__(self, smvApp):
         super(SmvMultiCsvFiles, self).__init__(smvApp)
+        attr = wrap_in_scala_option(smvApp._jvm, self.csvAttr())
         self._smvMultiCsvFiles = smvApp._jvm.org.tresamigos.smv.SmvMultiCsvFiles(
             self.dir(),
-            self.csvAttr(),
+            attr,
             None
         )
 

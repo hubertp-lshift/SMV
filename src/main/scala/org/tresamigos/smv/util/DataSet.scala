@@ -34,7 +34,7 @@ object DataSet {
    */
   def readFile(sqlContext: SQLContext,
                path: String,
-               attr: CsvAttributes = CsvAttributes.defaultCsv): DataFrame =
+               attr: Option[CsvAttributes] = Some(CsvAttributes.defaultCsv)): DataFrame =
     new FileIOHandler(sqlContext, path).csvFileWithSchema(attr)
 
   /**

@@ -28,7 +28,7 @@ package fixture {
 
   object file
       extends SmvCsvFile("./" + TestConf.testDataDir + "CsvTest/test1",
-                         CsvAttributes.defaultCsvWithHeader)
+                         Some(CsvAttributes.defaultCsvWithHeader))
 }
 
 package smv {

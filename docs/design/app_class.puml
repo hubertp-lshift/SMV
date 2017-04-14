@@ -28,7 +28,7 @@ package SMV {
   }
 
   class SmvCsvFile extends SmvFile {
-    +csvAttributes : CsvAttributes
+    +csvAttributes : Option[CsvAttributes]
     +schemaPath: String
   }
 

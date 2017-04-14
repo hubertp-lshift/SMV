@@ -16,7 +16,8 @@ package org.tresamigos.smv
 
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions._
-import scala.util.matching.Regex
+
+import scala.language.implicitConversions
 
 /**
  * DQM (Data Quality Module) providing classes for DF data quality assurance

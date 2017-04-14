@@ -200,7 +200,7 @@ class SmvPyClient(val j_smvApp: SmvApp) {
   /** Create a SmvCsvFile for use in Python */
   def smvCsvFile(moduleName: String,
                  path: String,
-                 csvAttr: CsvAttributes,
+                 csvAttr: Option[CsvAttributes],
                  pForceParserCheck: Boolean,
                  pFailAtParsingError: Boolean): SmvCsvFile =
     new SmvCsvFile(path, csvAttr) {
