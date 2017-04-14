@@ -65,4 +65,6 @@ package object dqm {
     })
     DQMFix(!check(col), lit(default) as col.getName, s"FormatFix(${col})", FailNone)
   }
+
+  private implicit def strToOpt(v: String): Option[String] = Some(v)
 }

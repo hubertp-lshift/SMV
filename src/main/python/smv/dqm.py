@@ -16,7 +16,7 @@ This module defines the abstract classes which formed the SmvDataSet Framework f
 """
 
 from smvapp import SmvApp
-import traceback
+from smv.utils import wrap_in_scala_option
 
 def SmvDQM():
     """Factory method for Scala SmvDQM"""
@@ -134,7 +134,8 @@ def DQMRule(rule, name = None, taskPolicy = None):
             (DQMRule): a DQMRule object
     """
     task = taskPolicy or FailNone()
-    return SmvApp.getInstance()._jvm.DQMRule(rule._jc, name, task)
+    name1 = wrap_in_scala_option(SmvApp.getInstance()._jvm, name)
+    return SmvApp.getInstance()._jvm.DQMRule(rule._jc, name1, task)
 
 def DQMFix(condition, fix, name = None, taskPolicy = None):
     """DQMFix will fix a column with a default value
@@ -154,4 +155,5 @@ def DQMFix(condition, fix, name = None, taskPolicy = None):
             (DQMFix): a DQMFix object
     """
     task = taskPolicy or FailNone()
-    return SmvApp.getInstance()._jvm.DQMFix(condition._jc, fix._jc, name, task)
+    name1 = wrap_in_scala_option(SmvApp.getInstance()._jvm, name)
+    return SmvApp.getInstance()._jvm.DQMFix(condition._jc, fix._jc, name1, task)

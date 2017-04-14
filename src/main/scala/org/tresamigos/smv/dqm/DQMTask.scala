@@ -51,7 +51,7 @@ case class FailPercent(threshold: Double) extends DQMTaskPolicy {
   private[smv] def createPolicy(name: String) = ImplementFailPercentPolicy(name, threshold)
 }
 
-abstract class DQMTask {
+sealed abstract class DQMTask {
   def name: String
   def taskPolicy: DQMTaskPolicy
   private[smv] def createPolicy(): DQMPolicy = taskPolicy.createPolicy(name)
@@ -68,11 +68,11 @@ abstract class DQMTask {
  **/
 case class DQMRule(
     rule: Column,
-    ruleName: String = null,
+    ruleName: Option[String] = None,
     taskPolicy: DQMTaskPolicy = FailNone
 ) extends DQMTask {
 
-  val name = if (ruleName == null) rule.toString else ruleName
+  lazy val name = ruleName.getOrElse(rule.toString)
 
   private[smv] def createCheckCol(dqmState: DQMState): (Column, Column, Column) = {
     val refCols = rule.toExpr.references.toSeq.map { r =>
@@ -112,11 +112,11 @@ case class DQMRule(
 case class DQMFix(
     condition: Column,
     fix: Column,
-    fixName: String = null,
+    fixName: Option[String] = None,
     taskPolicy: DQMTaskPolicy = FailNone
 ) extends DQMTask {
 
-  val name = if (fixName == null) s"if(${condition}) ${fix}" else fixName
+  val name = fixName.getOrElse(s"if(${condition}) ${fix}")
 
   private val (fixExpr, toBeFixed) = {
     fix.toExpr match {
