@@ -15,12 +15,11 @@
 package org.tresamigos.smv
 
 import org.tresamigos.smv.util.Edd
-
 import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 /**
  * Driver for SMV applications.  Most apps do not need to override this class and should just be

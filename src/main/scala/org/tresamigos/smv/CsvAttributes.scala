@@ -39,7 +39,7 @@ private case object InferFromSchemaCsvAttributes extends CsvAttributes {
 
 object CsvAttributes {
   // common CsvAttributes combos to be imported explicitly
-  lazy val defaultTsv: CsvAttributes = new CsvAttributes(delimiter = '\t')
+  lazy val defaultTsv: CsvAttributes           = new CsvAttributes(delimiter = '\t')
   lazy val defaultCsvAttributes: CsvAttributes = new CsvAttributes()
   lazy val defaultCsvWithHeader                = new CsvAttributes(hasHeader = true)
   lazy val defaultTsvWithHeader                = new CsvAttributes(delimiter = '\t', hasHeader = true)

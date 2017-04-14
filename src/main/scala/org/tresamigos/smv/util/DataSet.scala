@@ -32,7 +32,8 @@ object DataSet {
    * The default format is headerless CSV with '"' as the quote
    * character
    */
-  def readFile(sqlContext: SQLContext, path: String)(implicit attr: CsvAttributes = CsvAttributes.defaultCsvAttributes): DataFrame =
+  def readFile(sqlContext: SQLContext, path: String)(
+      implicit attr: CsvAttributes = CsvAttributes.defaultCsvAttributes): DataFrame =
     new FileIOHandler(sqlContext, path).csvFileWithSchema
 
   /**
