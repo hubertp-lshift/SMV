@@ -186,7 +186,7 @@ case class EddResultFunctions(eddRes: DataFrame) {
           (($"colName" === $"_colName") && ($"taskType" === $"_taskType") && ($"taskName" === $"_taskName"))
         }
 
-        val joined = cacheThis.join(cacheThat, joinCond, SmvJoinType.Inner)
+        val joined = cacheThis.join(cacheThat, joinCond, SmvJoinType.Inner.name)
         // Spark 1.5.0 has a bug which prevent cache on a join result
 
         val joinedCnt = joined.count

@@ -158,7 +158,7 @@ class JoinHelperTest extends SmvTestUtil {
     val srdd2 = dfFrom("a2:Integer; c:String", """1,asdf;
          2,asdfg""")
 
-    val result     = srdd1.joinUniqFieldNames(srdd2, $"a" === $"a2", "inner")
+    val result     = srdd1.joinUniqFieldNames(srdd2, $"a" === $"a2", SmvJoinType.Inner)
     val fieldNames = result.columns
     assert(fieldNames === Seq("a", "b", "c", "a2", "_c"))
     assertUnorderedSeqEqual(result.collect.map(_.toString),
@@ -176,7 +176,7 @@ class JoinHelperTest extends SmvTestUtil {
     val srdd2 = dfFrom("a2:Integer; c:String", """1,asdf;
       2,asdfg""")
 
-    val result = srdd1.joinUniqFieldNames(srdd2, $"a" === $"a2", "inner")
+    val result = srdd1.joinUniqFieldNames(srdd2, $"a" === $"a2", SmvJoinType.Inner)
     assertSrddSchemaEqual(result, "a: Integer; b: Double; C: String; a2: Integer; _c: String")
   }
 
@@ -190,7 +190,7 @@ class JoinHelperTest extends SmvTestUtil {
     val srdd2 = dfFrom("a:Integer; c:String", """1,asdf;
          2,asdfg""")
 
-    val result     = srdd1.smvJoinByKey(srdd2, Seq("a"), "inner")
+    val result     = srdd1.smvJoinByKey(srdd2, Seq("a"), SmvJoinType.Inner)
     val fieldNames = result.columns
     assert(fieldNames === Seq("a", "b", "c", "_c"))
     assertUnorderedSeqEqual(result.collect.map(_.toString),

@@ -49,12 +49,12 @@ object SmvPythonHelper {
   def smvJoinByKey(df: DataFrame,
                    other: DataFrame,
                    keys: Seq[String],
-                   joinType: String): DataFrame =
+                   joinType: SmvJoinType): DataFrame =
     df.smvJoinByKey(other, keys, joinType)
 
   def smvJoinMultipleByKey(df: DataFrame,
                            keys: Array[String],
-                           joinType: String): SmvMultiJoinAdaptor =
+                           joinType: SmvJoinType): SmvMultiJoinAdaptor =
     new SmvMultiJoinAdaptor(df.smvJoinMultipleByKey(keys, joinType))
 
   def smvSelectMinus(df: DataFrame, cols: Array[String]): DataFrame =
@@ -176,7 +176,7 @@ class SmvGroupedDataAdaptor(grouped: SmvGroupedData) {
 class SmvMultiJoinAdaptor(joiner: SmvMultiJoin) {
   def joinWith(df: DataFrame,
                postfix: Option[String],
-               joinType: Option[String]): SmvMultiJoinAdaptor =
+               joinType: Option[SmvJoinType]): SmvMultiJoinAdaptor =
     new SmvMultiJoinAdaptor(joiner.joinWith(df, postfix, joinType))
 
   def doJoin(dropExtra: Boolean): DataFrame = joiner.doJoin(dropExtra)

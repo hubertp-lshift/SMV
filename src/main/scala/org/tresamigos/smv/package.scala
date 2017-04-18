@@ -108,24 +108,6 @@ package object smv {
     if (col_comp.exists(_ == can_comp)) mkUniq(collection, can_to) else candidate
   }
 
-  /**
-   * Instead of using String for join type, always use the link here.
-   *
-   * If there are typos on the join type, using the link in client code will cause
-   * compile time failure, which using string itself will cause run-time failure.
-   *
-   * Spark(as of 1.4)'s join type is a String.  Could use enum or case objects here,
-   * but there are clients using the String api, so will push that change till later.
-   *
-   * @group other
-   */
-  object SmvJoinType {
-    val Inner      = "inner"
-    val Outer      = "outer"
-    val LeftOuter  = "leftouter"
-    val RightOuter = "rightouter"
-    val Semi       = "leftsemi"
-  }
 
   /***************************************************************************
    * Functions

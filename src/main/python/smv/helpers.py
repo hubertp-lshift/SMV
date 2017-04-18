@@ -164,7 +164,7 @@ class SmvMultiJoin(object):
         self.sqlContext = sqlContext
         self.mj = mj
 
-    def joinWith(self, df, postfix, jointype = None):
+    def joinWith(self, df, postfix, joinType = None):
         """Append SmvMultiJoin Chain
 
             Args:
@@ -178,9 +178,13 @@ class SmvMultiJoin(object):
             Returns:
                 (SmvMultiJoin): formula of the join. need to call `doJoin()` on it to execute
         """
-        postfix = wrap_in_scala_option(_sparkContext()._jvm, postfix)
-        jointype = wrap_in_scala_option(_sparkContext()._jvm, jointype)
-        return SmvMultiJoin(self.sqlContext, self.mj.joinWith(df._jdf, postfix, jointype))
+        _jvmRef = _sparkContext()._jvm
+        postfix = wrap_in_scala_option(_jvmRef, postfix)
+        if joinType is None:
+            joinType = wrap_in_scala_option(_jvmRef, joinType)
+        else:
+            joinType =wrap_in_scala_option(_jvmRef, _jvmRef.org.tresamigos.smv.SmvJoinType.apply(joinType))
+        return SmvMultiJoin(self.sqlContext, self.mj.joinWith(df._jdf, postfix, joinType))
 
     def doJoin(self, dropextra = False):
         """Trigger the join operation
@@ -313,6 +317,7 @@ class DataFrameHelper(object):
             Returns:
                 (DataFrame): result of the join operation
         """
+        joinType = self._sc._jvm.org.tresamigos.smv.SmvJoinType.apply(joinType)
         jdf = self._jPythonHelper.smvJoinByKey(self._jdf, other._jdf, _to_seq(keys), joinType)
         return DataFrame(jdf, self._sql_ctx)
 
@@ -331,6 +336,8 @@ class DataFrameHelper(object):
             Returns:
                 (SmvMultiJoin): the builder object for the multi join operation
         """
+
+        joinType = self._sc._jvm.org.tresamigos.smv.SmvJoinType.apply(joinType)
         jdf = self._jPythonHelper.smvJoinMultipleByKey(self._jdf, smv_copy_array(self._sc, *keys), joinType)
         return SmvMultiJoin(self._sql_ctx, jdf)
 

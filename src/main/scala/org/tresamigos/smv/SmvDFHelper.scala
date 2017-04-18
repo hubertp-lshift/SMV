@@ -282,7 +282,7 @@ class SmvDFHelper(df: DataFrame) {
   private[smv] def joinUniqFieldNames(
       otherPlan: DataFrame,
       on: Column,
-      joinType: String = "inner",
+      joinType: SmvJoinType = SmvJoinType.Inner,
       postfix: Option[String] = None
   ): DataFrame = {
     val namesLower = df.columns.map { c =>
@@ -294,7 +294,7 @@ class SmvDFHelper(df: DataFrame) {
       }
       .filter { case (l, r) => l != r }
 
-    df.join(otherPlan.smvRenameField(renamedFields: _*), on: Column, joinType)
+    df.join(otherPlan.smvRenameField(renamedFields: _*), on: Column, joinType.name)
   }
 
   /**
@@ -319,7 +319,7 @@ class SmvDFHelper(df: DataFrame) {
   def smvJoinByKey(
       otherPlan: DataFrame,
       keys: Seq[String],
-      joinType: String,
+      joinType: SmvJoinType,
       postfix: Option[String] = None,
       dropRightKey: Boolean = true
   ): DataFrame = {
@@ -370,7 +370,7 @@ class SmvDFHelper(df: DataFrame) {
    *
    * @return an `SmvMultiJoin` object which support `joinWith` and `doJoin` method
    **/
-  def smvJoinMultipleByKey(keys: Seq[String], defaultJoinType: String) = {
+  def smvJoinMultipleByKey(keys: Seq[String], defaultJoinType: SmvJoinType) = {
     new SmvMultiJoin(Nil, SmvMultiJoinConf(df, keys, defaultJoinType))
   }
 
@@ -929,7 +929,7 @@ class SmvDFHelper(df: DataFrame) {
     val joined = otherSimple.foldLeft(dfSimple) { (c, p) =>
       val newkey = p._1
       val r      = p._2
-      c.join(r, $"${key}" === $"${newkey}", SmvJoinType.Outer)
+      c.join(r, $"${key}" === $"${newkey}", SmvJoinType.Outer.name)
         .smvSelectPlus(coalesce($"${key}", $"${newkey}") as "tmp")
         .smvSelectMinus(key)
         .smvRenameField("tmp" -> key)
