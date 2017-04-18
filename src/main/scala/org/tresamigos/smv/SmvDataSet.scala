@@ -15,7 +15,7 @@
 package org.tresamigos.smv
 
 import org.apache.spark.sql.DataFrame
-import dqm.{DQMValidator, FailParserCountPolicy, SmvDQM, TerminateParserLogger}
+import dqm._
 
 import scala.collection.JavaConversions._
 import scala.util.Try
@@ -186,7 +186,7 @@ abstract class SmvDataSet extends FilenamePart {
     versionedBasePath(prefix) + ".valid"
 
   /** perform the actual run of this module to get the generated SRDD result. */
-  private[smv] def doRun(dsDqm: DQMValidator): DataFrame
+  private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame
 
   /**
    * delete the output(s) associated with this module (csv file and schema).
@@ -221,13 +221,13 @@ abstract class SmvDataSet extends FilenamePart {
     val validator = new ValidationSet(Seq(dsDqm), isPersistValidateResult)
 
     if (isEphemeral) {
-      val df = dsDqm.attachTasks(doRun(dsDqm))
+      val df = dsDqm.attachTasks(doRun(Some(dsDqm)))
       validator.validate(df, false, moduleValidPath()) // no action before this point
       df
     } else {
       readPersistedFile().recoverWith {
         case e =>
-          val df = dsDqm.attachTasks(doRun(dsDqm))
+          val df = dsDqm.attachTasks(doRun(Some(dsDqm)))
           // Delete outputs in case data was partially written previously
           deleteOutputs
           persist(df)
@@ -270,6 +270,9 @@ abstract class SmvDataSet extends FilenamePart {
       handler.csvFileWithSchema
     }
   }
+
+  protected def parserValidator(dsDqm: Option[DQMValidator]): ParserLogger =
+    dsDqm.map(_.createParserValidator()).getOrElse(TerminateParserLogger)
 }
 
 /**
@@ -306,7 +309,7 @@ case class SmvHiveTable(override val tableName: String, val userQuery: Option[St
   val query =
     userQuery.getOrElse("select * from " + tableName)
 
-  override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame = {
     val df = app.sqlContext.sql(query)
     run(df)
   }
@@ -381,12 +384,11 @@ case class SmvCsvFile(
     with SmvDSWithParser {
   assert(csvAttributes != null)
 
-  override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
-    val parserValidator =
-      if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame = {
     // TODO: this should use inputDir instead of dataDir
-    val handler = new FileIOHandler(app.sqlContext, fullPath, fullSchemaPath, parserValidator)
-    val df      = handler.csvFileWithSchema(csvAttributes)
+    val handler =
+      new FileIOHandler(app.sqlContext, fullPath, fullSchemaPath, parserValidator(dsDqm))
+    val df = handler.csvFileWithSchema(csvAttributes)
     run(df)
   }
 }
@@ -413,9 +415,7 @@ class SmvMultiCsvFiles(
     if (schemaPath.isEmpty) Some(SmvSchema.dataPathToSchemaPath(fullPath))
     else super.fullSchemaPath
 
-  override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
-    val parserValidator =
-      if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame = {
 
     val filesInDir = SmvHDFS.dirList(fullPath).map { n =>
       s"${fullPath}/${n}"
@@ -426,7 +426,7 @@ class SmvMultiCsvFiles(
 
     val df = filesInDir
       .map { s =>
-        val handler = new FileIOHandler(app.sqlContext, s, fullSchemaPath, parserValidator)
+        val handler = new FileIOHandler(app.sqlContext, s, fullSchemaPath, parserValidator(dsDqm))
         handler.csvFileWithSchema(csvAttributes)
       }
       .reduce(_ unionAll _)
@@ -442,12 +442,11 @@ case class SmvFrlFile(
 ) extends SmvFile
     with SmvDSWithParser {
 
-  override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
-    val parserValidator =
-      if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame = {
     // TODO: this should use inputDir instead of dataDir
-    val handler = new FileIOHandler(app.sqlContext, fullPath, fullSchemaPath, parserValidator)
-    val df      = handler.frlFileWithSchema()
+    val handler =
+      new FileIOHandler(app.sqlContext, fullPath, fullSchemaPath, parserValidator(dsDqm))
+    val df = handler.frlFileWithSchema()
     run(df)
   }
 }
@@ -490,7 +489,7 @@ abstract class SmvModule(val description: String) extends SmvDataSet {
   def run(inputs: runParams): DataFrame
 
   /** perform the actual run of this module to get the generated SRDD result. */
-  override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame = {
     val paramMap: Map[SmvDataSet, DataFrame] =
       (resolvedRequiresDS map (dep => (dep, dep.rdd))).toMap
     run(new runParams(paramMap))
@@ -612,7 +611,7 @@ class SmvModuleLink(val outputModule: SmvOutput)
    */
   override def computeRDD =
     throw new SmvRuntimeException("SmvModuleLink computeRDD should never be called")
-  override private[smv] def doRun(dsDqm: DQMValidator) =
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]) =
     throw new SmvRuntimeException("SmvModuleLink doRun should never be called")
 
   /**
@@ -674,7 +673,7 @@ class SmvExtModulePython(target: ISmvModule) extends SmvDataSet {
     resolvedRequiresDS = target.dependencies map (urn => resolver.loadDataSet(URN(urn)).head)
     this
   }
-  override private[smv] def doRun(dsDqm: DQMValidator): DataFrame =
+  override private[smv] def doRun(dsDqm: Option[DQMValidator]): DataFrame =
     target.getDataFrame(new DQMValidator(createDsDqm),
                         resolvedRequiresDS
                           .map { ds =>
@@ -734,13 +733,11 @@ case class SmvCsvStringData(
     (crc.getValue + datasetCRC).toInt
   }
 
-  override def doRun(dsDqm: DQMValidator): DataFrame = {
+  override def doRun(dsDqm: Option[DQMValidator]): DataFrame = {
     val schema    = SmvSchema.fromString(schemaStr)
     val dataArray = data.map(_.split(";").map(_.trim)).getOrElse(Array.empty[String])
 
-    val parserValidator =
-      if (dsDqm == null) TerminateParserLogger else dsDqm.createParserValidator()
-    val handler = new FileIOHandler(app.sqlContext, null, None, parserValidator)
+    val handler = new FileIOHandler(app.sqlContext, null, None, parserValidator(dsDqm))
     handler.csvStringRDDToDF(app.sc.makeRDD(dataArray), schema)(schema.extractCsvAttributes())
   }
 }

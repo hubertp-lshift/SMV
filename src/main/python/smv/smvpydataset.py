@@ -312,6 +312,7 @@ class SmvCsvFile(SmvPyInput, WithParser):
         """
 
     def doRun(self, validator, known):
+        validator = wrap_in_scala_option(self.smvApp._jvm, validator)
         jdf = self._smvCsvFile.doRun(validator)
         return self.run(DataFrame(jdf, self.smvApp.sqlContext))
 
@@ -342,6 +343,7 @@ class SmvMultiCsvFiles(SmvPyInput, WithParser):
         """
 
     def doRun(self, validator, known):
+        validator = wrap_in_scala_option(self.smvApp._jvm, validator)
         jdf = self._smvMultiCsvFiles.doRun(validator)
         return self.run(DataFrame(jdf, self.smvApp.sqlContext))
 
@@ -378,6 +380,7 @@ class SmvCsvStringData(SmvPyInput):
         """
 
     def doRun(self, validator, known):
+        validator = wrap_in_scala_option(self.smvApp._jvm, validator)
         jdf = self._smvCsvStringData.doRun(validator)
         return self.run(DataFrame(jdf, self.smvApp.sqlContext))
 

@@ -181,7 +181,7 @@ package org.tresamigos.fixture.smvapptest {
   import org.tresamigos.smv._, dqm._
 
   class TestFile(override val path: String) extends SmvFile {
-    override def doRun(dsDqm: DQMValidator): DataFrame = null
+    override def doRun(dsDqm: Option[DQMValidator]): DataFrame = null
   }
 
   object f1 extends TestFile("F1.csv")
