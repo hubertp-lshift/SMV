@@ -250,7 +250,7 @@ abstract class SmvDataSet extends FilenamePart {
     val handler = new FileIOHandler(app.sqlContext, publishPath(version))
     //Same as in persist, publish null string as a special value with assumption that it's not
     //a valid data value
-    handler.saveAsCsvWithSchema(df, strNullValue = "_SmvStrNull_")
+    handler.saveAsCsvWithSchema(df, strNullValue = Some("_SmvStrNull_"))
 
     /* publish should also calculate edd if generarte Edd flag was turned on */
     if (app.genEdd)

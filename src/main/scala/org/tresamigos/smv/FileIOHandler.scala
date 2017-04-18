@@ -119,13 +119,11 @@ private[smv] class FileIOHandler(
   // guaranteed in order when read back in, we need to only store the body w/o the header
   private[smv] def saveAsCsvWithSchema(
       df: DataFrame,
-      schemaWithMeta: SmvSchema = null,
-      strNullValue: String = ""
+      schemaWithMeta: Option[SmvSchema] = None,
+      strNullValue: Option[String] = None
   )(implicit csvAttributes: CsvAttributes) {
 
-    val schema = if (schemaWithMeta == null) { SmvSchema.fromDataFrame(df, strNullValue) } else {
-      schemaWithMeta
-    }
+    val schema               = schemaWithMeta.getOrElse(SmvSchema.fromDataFrame(df, strNullValue.getOrElse("")))
     val schemaWithAttributes = schema.addCsvAttributes(csvAttributes)
     val qc                   = csvAttributes.quotechar
 

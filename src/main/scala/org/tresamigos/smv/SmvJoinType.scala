@@ -15,31 +15,30 @@
 package org.tresamigos.smv
 
 /**
-  * Instead of using String for join type, always use the link here.
-  *
-  * If there are typos on the join type, using the link in client code will cause
-  * compile time failure, which using string itself will cause run-time failure.
-  *
-  * Spark(as of 1.4)'s join type is a String.  Could use enum or case objects here,
-  * but there are clients using the String api, so will push that change till later.
-  *
-  */
-
+ * Instead of using String for join type, always use the link here.
+ *
+ * If there are typos on the join type, using the link in client code will cause
+ * compile time failure, which using string itself will cause run-time failure.
+ *
+ * Spark(as of 1.4)'s join type is a String.  Could use enum or case objects here,
+ * but there are clients using the String api, so will push that change till later.
+ *
+ */
 sealed abstract class SmvJoinType(val name: String)
 
 object SmvJoinType {
-  case object Inner extends SmvJoinType("inner")
-  case object Outer extends SmvJoinType("outer")
-  case object LeftOuter extends SmvJoinType("leftouter")
+  case object Inner      extends SmvJoinType("inner")
+  case object Outer      extends SmvJoinType("outer")
+  case object LeftOuter  extends SmvJoinType("leftouter")
   case object RightOuter extends SmvJoinType("rightouter")
-  case object Semi extends SmvJoinType("leftsemi")
+  case object Semi       extends SmvJoinType("leftsemi")
 
   def apply(x: String): SmvJoinType = x match {
-    case Inner.name => Inner
-    case Outer.name => Outer
-    case LeftOuter.name => LeftOuter
+    case Inner.name      => Inner
+    case Outer.name      => Outer
+    case LeftOuter.name  => LeftOuter
     case RightOuter.name => RightOuter
-    case Semi.name => Semi
-    case _ => throw new Exception(s"Invalid Join Type: $x")
+    case Semi.name       => Semi
+    case _               => throw new Exception(s"Invalid Join Type: $x")
   }
 }

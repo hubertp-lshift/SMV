@@ -108,7 +108,6 @@ package object smv {
     if (col_comp.exists(_ == can_comp)) mkUniq(collection, can_to) else candidate
   }
 
-
   /***************************************************************************
    * Functions
    ***************************************************************************/
