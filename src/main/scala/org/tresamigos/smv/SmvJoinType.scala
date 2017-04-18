@@ -39,6 +39,6 @@ object SmvJoinType {
     case LeftOuter.name  => LeftOuter
     case RightOuter.name => RightOuter
     case Semi.name       => Semi
-    case _               => throw new Exception(s"Invalid Join Type: $x")
+    case _               => throw new SmvRuntimeException(s"Invalid Join Type: $x")
   }
 }
