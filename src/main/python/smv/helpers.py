@@ -19,7 +19,7 @@ from pyspark import SparkContext
 from pyspark.sql import HiveContext, DataFrame
 from pyspark.sql.column import Column
 from pyspark.sql.functions import col
-from utils import smv_copy_array
+from utils import smv_copy_array, wrap_in_scala_option
 
 import sys
 import inspect
@@ -178,6 +178,8 @@ class SmvMultiJoin(object):
             Returns:
                 (SmvMultiJoin): formula of the join. need to call `doJoin()` on it to execute
         """
+        postfix = wrap_in_scala_option(_sparkContext()._jvm, postfix)
+        jointype = wrap_in_scala_option(_sparkContext()._jvm, jointype)
         return SmvMultiJoin(self.sqlContext, self.mj.joinWith(df._jdf, postfix, jointype))
 
     def doJoin(self, dropextra = False):

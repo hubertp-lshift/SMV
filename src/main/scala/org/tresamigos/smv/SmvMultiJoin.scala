@@ -16,7 +16,7 @@ package org.tresamigos.smv
 
 import org.apache.spark.sql.DataFrame
 
-private[smv] case class SmvJoinDF(df: DataFrame, postfix: String, jType: String)
+private[smv] case class SmvJoinDF(df: DataFrame, postfix: Option[String], jType: String)
 
 private[smv] case class SmvMultiJoinConf(leftDf: DataFrame,
                                          keys: Seq[String],
@@ -33,10 +33,22 @@ class SmvMultiJoin(val dfChain: Seq[SmvJoinDF], val conf: SmvMultiJoinConf) {
    *    doJoin()
    * }}}
    **/
-  def joinWith(df: DataFrame, postfix: String, joinType: String = null) = {
-    val dfJT     = if (joinType == null) conf.defaultJoinType else joinType
+  def joinWith(df: DataFrame,
+               postfix: Option[String],
+               joinType: Option[String] = None): SmvMultiJoin = {
+    val dfJT     = joinType.getOrElse(conf.defaultJoinType)
     val newChain = dfChain :+ SmvJoinDF(df, postfix, dfJT)
     new SmvMultiJoin(newChain, conf)
+  }
+
+  def joinWith(df: DataFrame, postfix: String): SmvMultiJoin = {
+    assert(postfix != null, "Postfix for the column must not be null")
+    joinWith(df, Some(postfix), None)
+  }
+
+  def joinWith(df: DataFrame, postfix: String, joinType: String): SmvMultiJoin = {
+    assert(postfix != null && joinType != null, "Postfix and joinType must not be null")
+    joinWith(df, Some(postfix), Some(joinType))
   }
 
   /**
@@ -52,7 +64,7 @@ class SmvMultiJoin(val dfChain: Seq[SmvJoinDF], val conf: SmvMultiJoinConf) {
     }
 
     val colsWithPostfix = dfChain
-      .map { _.postfix }
+      .map { _.postfix.getOrElse("") }
       .flatMap { p =>
         res.columns.filter { c =>
           c.endsWith(p)

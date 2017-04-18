@@ -170,7 +170,8 @@ class SmvApp(object):
         return self._jvm.scala.Option.apply(val)
 
     def createDF(self, schema, data = None):
-        return DataFrame(self.j_smvPyClient.dfFrom(schema, data), self.sqlContext)
+        data1 = wrap_in_scala_option(self._jvm, data)
+        return DataFrame(self.j_smvPyClient.dfFrom(schema, data1), self.sqlContext)
 
     def _mkCsvAttr(self, delimiter=',', quotechar='"', hasHeader=False):
         """Factory method for creating instances of Scala case class CsvAttributes"""

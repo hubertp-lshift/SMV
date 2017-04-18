@@ -98,13 +98,13 @@ package object smv {
       collection: Seq[String],
       candidate: String,
       ignoreCase: Boolean = false,
-      postfix: String = null
+      postfix: Option[String] = None
   ): String = {
     val col_comp = if (ignoreCase) collection.map { c =>
       c.toLowerCase
     } else collection
     val can_comp = if (ignoreCase) candidate.toLowerCase else candidate
-    val can_to   = if (postfix == null) "_" + candidate else candidate + postfix
+    val can_to   = postfix.map(candidate + _).getOrElse("_" + candidate)
     if (col_comp.exists(_ == can_comp)) mkUniq(collection, can_to) else candidate
   }
 

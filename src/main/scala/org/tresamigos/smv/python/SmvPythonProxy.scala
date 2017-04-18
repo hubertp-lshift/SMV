@@ -174,7 +174,9 @@ class SmvGroupedDataAdaptor(grouped: SmvGroupedData) {
 }
 
 class SmvMultiJoinAdaptor(joiner: SmvMultiJoin) {
-  def joinWith(df: DataFrame, postfix: String, joinType: String): SmvMultiJoinAdaptor =
+  def joinWith(df: DataFrame,
+               postfix: Option[String],
+               joinType: Option[String]): SmvMultiJoinAdaptor =
     new SmvMultiJoinAdaptor(joiner.joinWith(df, postfix, joinType))
 
   def doJoin(dropExtra: Boolean): DataFrame = joiner.doJoin(dropExtra)

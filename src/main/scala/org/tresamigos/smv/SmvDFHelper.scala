@@ -283,7 +283,7 @@ class SmvDFHelper(df: DataFrame) {
       otherPlan: DataFrame,
       on: Column,
       joinType: String = "inner",
-      postfix: String = null
+      postfix: Option[String] = None
   ): DataFrame = {
     val namesLower = df.columns.map { c =>
       c.toLowerCase
@@ -320,7 +320,7 @@ class SmvDFHelper(df: DataFrame) {
       otherPlan: DataFrame,
       keys: Seq[String],
       joinType: String,
-      postfix: String = null,
+      postfix: Option[String] = None,
       dropRightKey: Boolean = true
   ): DataFrame = {
     import df.sqlContext.implicits._
