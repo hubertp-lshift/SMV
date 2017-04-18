@@ -1207,13 +1207,15 @@ class SmvDFHelper(df: DataFrame) {
    * Export DF to local file system. Path is relative to the app runing dir
    *
    * @param path relative path to the app runing dir on local file system (instead of HDFS)
-   * @param n number of records to be exported. Defualt is to export every records
+   * @param desiredSize number of records to be exported. Default, scala.None, is to export all records
    *
    * **NOTE** since we have to collect the DF and then call JAVA file operations, the job
    * have to be launched as either local or yar-client mode. Also it is user's responsibility
    * to make sure that the DF is small enought to fit into memory.
    **/
-  def smvExportCsv(path: String, n: Integer = null) {
+  def smvExportCsv(path: String, desiredSize: Option[Integer] = None) {
+    assert(desiredSize.map(_ != null).getOrElse(true),
+           "The desired number of records for the exported csv file must not be null")
     val schema = SmvSchema.fromDataFrame(df)
     val ca     = CsvAttributes.defaultCsvAttributes
 
@@ -1226,11 +1228,13 @@ class SmvDFHelper(df: DataFrame) {
     // issue #312: Spark's collect from a large partition is observed
     // to add duplicate records, hence we use coalesce to reduce the
     // number of partitions before calling collect
-    val bodyStr = if (n == null) {
-      df.map(schema.rowToCsvString(_, ca)).coalesce(4).collect.mkString("\n")
-    } else {
-      df.limit(n).map(schema.rowToCsvString(_, ca)).coalesce(4).collect.mkString("\n")
-    }
+    val bodyStr = desiredSize
+      .map(n => df.limit(n))
+      .getOrElse(df)
+      .map(schema.rowToCsvString(_, ca))
+      .coalesce(4)
+      .collect
+      .mkString("\n")
 
     SmvReportIO.saveLocalReport(headerStr + "\n" + bodyStr + "\n", path)
   }

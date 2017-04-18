@@ -611,6 +611,7 @@ class DataFrameHelper(object):
             Returns:
                 (None)
         """
+        n = wrap_in_scala_option(self._sc._jvm, n)
         self._jDfHelper.smvExportCsv(path, n)
 
     def smvOverlapCheck(self, keyColName):
