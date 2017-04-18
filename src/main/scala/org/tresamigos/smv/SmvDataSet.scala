@@ -292,16 +292,19 @@ private[smv] abstract class SmvInputDataSet extends SmvDataSet {
 /**
  * SMV Dataset Wrapper around a hive table.
  */
-case class SmvHiveTable(override val tableName: String, val userQuery: String = null)
+case class SmvHiveTable(override val tableName: String, val userQuery: Option[String] = None)
     extends SmvInputDataSet {
   override def description() = s"Hive Table: @${tableName}"
 
-  val query = {
-    if (userQuery == null)
-      "select * from " + tableName
-    else
-      userQuery
+  assert(userQuery.map(_ != null).getOrElse(true),
+         s"User query for table $tableName must not be null")
+
+  def this(tableName: String, userQuery: String) {
+    this(tableName, Some(userQuery))
   }
+
+  val query =
+    userQuery.getOrElse("select * from " + tableName)
 
   override private[smv] def doRun(dsDqm: DQMValidator): DataFrame = {
     val df = app.sqlContext.sql(query)

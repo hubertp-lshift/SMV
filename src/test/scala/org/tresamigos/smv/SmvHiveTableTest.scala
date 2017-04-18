@@ -12,10 +12,16 @@ class SmvHiveTableTest extends SmvTestUtil {
     val t = app.createDF("k:String; v:Integer", """k1,15; k2,20; k3,25""")
     util.DataSet.exportDataFrameToHive(sqlContext, t, "bar")
 
-    val ht = new SmvHiveTable("bar")
+    val ht = SmvHiveTable("bar")
     val df = ht.rdd()
     assertSrddDataEqual(df, """k1,15; k2,20; k3,25""")
     assertSrddSchemaEqual(df, "k:String; v:Integer")
+  }
+
+  test("test SmvHiveTable with invalid query") {
+    intercept[AssertionError] {
+      new SmvHiveTable("bar", null: String)
+    }
   }
 
 }

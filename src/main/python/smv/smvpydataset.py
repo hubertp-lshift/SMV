@@ -19,7 +19,7 @@ from pyspark import SparkContext
 from pyspark.sql import HiveContext, DataFrame
 from pyspark.sql.column import Column
 from pyspark.sql.functions import col
-from utils import smv_copy_array, default_csv_attributes
+from utils import smv_copy_array, default_csv_attributes, wrap_in_scala_option
 
 import abc
 
@@ -388,7 +388,8 @@ class SmvHiveTable(SmvPyInput):
 
     def __init__(self, smvApp):
         super(SmvHiveTable, self).__init__(smvApp)
-        self._smvHiveTable = self.smvApp._jvm.org.tresamigos.smv.SmvHiveTable(self.tableName(), self.tableQuery())
+        tableQuery = wrap_in_scala_option(self.smvApp._jvm, self.tableQuery())
+        self._smvHiveTable = self.smvApp._jvm.org.tresamigos.smv.SmvHiveTable(self.tableName(), tableQuery)
 
     def description(self):
         return "Hive Table: @" + self.tableName()
