@@ -151,7 +151,7 @@ object ShellCmd {
    * Read in a Hive table as DF
   **/
   def openHive(tableName: String) = {
-    new SmvHiveTable(tableName).rdd()
+    SmvHiveTable(tableName).rdd()
   }
 
   /**

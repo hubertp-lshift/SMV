@@ -20,7 +20,7 @@ class SmvHiveTableTest extends SmvTestUtil {
 
   test("test SmvHiveTable with invalid query") {
     intercept[AssertionError] {
-      new SmvHiveTable("bar", null: String)
+      SmvHiveTable("bar", null: String)
     }
   }
 

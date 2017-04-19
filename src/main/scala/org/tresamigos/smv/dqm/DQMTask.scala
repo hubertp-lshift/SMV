@@ -75,14 +75,6 @@ case class DQMRule(
   assert(ruleName.map(_ != null).getOrElse(false),
          s"The name assigned to rule $rule cannot be null")
 
-  def this(rule: Column, ruleName: String) {
-    this(rule, Some(ruleName))
-  }
-
-  def this(rule: Column, ruleName: String, taskPolicy: DQMTaskPolicy) {
-    this(rule, Some(ruleName), taskPolicy)
-  }
-
   lazy val name = ruleName.getOrElse(rule.toString)
 
   private[smv] def createCheckCol(dqmState: DQMState): (Column, Column, Column) = {
@@ -111,6 +103,14 @@ case class DQMRule(
   }
 }
 
+object DQMRule {
+  def apply(rule: Column, ruleName: String): DQMRule =
+    DQMRule(rule, Some(ruleName))
+
+  def apply(rule: Column, ruleName: String, taskPolicy: DQMTaskPolicy): DQMRule =
+    DQMRule(rule, Some(ruleName), taskPolicy)
+}
+
 /**
  * DQMFix will fix a column with a default value
  * {{{
@@ -129,14 +129,6 @@ case class DQMFix(
 
   assert(fixName.map(_ != null).getOrElse(false), s"The name assigned to fix $fix cannot be null")
 
-  def this(condition: Column, fix: Column, fixName: String) {
-    this(condition, fix, Some(fixName))
-  }
-
-  def this(condition: Column, fix: Column, fixName: String, taskPolicy: DQMTaskPolicy) {
-    this(condition, fix, Some(fixName), taskPolicy)
-  }
-
   val name = fixName.getOrElse(s"if(${condition}) ${fix}")
 
   private val (fixExpr, toBeFixed) = {
@@ -153,4 +145,14 @@ case class DQMFix(
     })
     when(checkUdf(condition), new Column(fixExpr)).otherwise(new Column(toBeFixed)) as toBeFixed
   }
+}
+
+object DQMFix {
+
+  def apply(condition: Column, fix: Column, fixName: String): DQMFix =
+    DQMFix(condition, fix, Some(fixName))
+
+  def apply(condition: Column, fix: Column, fixName: String, taskPolicy: DQMTaskPolicy): DQMFix =
+    DQMFix(condition, fix, Some(fixName), taskPolicy)
+
 }

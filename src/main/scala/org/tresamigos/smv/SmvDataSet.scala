@@ -301,10 +301,6 @@ case class SmvHiveTable(override val tableName: String, val userQuery: Option[St
   assert(userQuery.map(_ != null).getOrElse(true),
          s"User query for table $tableName must not be null")
 
-  def this(tableName: String, userQuery: String) {
-    this(tableName, Some(userQuery))
-  }
-
   val query =
     userQuery.getOrElse("select * from " + tableName)
 
@@ -312,6 +308,13 @@ case class SmvHiveTable(override val tableName: String, val userQuery: Option[St
     val df = app.sqlContext.sql(query)
     run(df)
   }
+}
+
+object SmvHiveTable {
+
+  def apply(tableName: String, userQuery: String): SmvHiveTable =
+    SmvHiveTable(tableName, Some(userQuery))
+
 }
 
 /**
