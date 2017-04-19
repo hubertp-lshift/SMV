@@ -14,10 +14,13 @@ import smvfuncs._
  * @param commonLevelMatcher for all levels (except top level) shared deterministic condition for narrow down the search space
  * @param levelMatchers a list of common match conditions, all of them will be tested
  */
-case class SmvEntityMatcher(exactMatchFilter: AbstractExactMatchFilter,
-                            commonLevelMatcher: CommonLevelMatcher,
+case class SmvEntityMatcher(exactMatchFilter: Option[AbstractExactMatchFilter],
+                            commonLevelMatcher: Option[CommonLevelMatcher],
                             levelMatchers: List[LevelMatcher]) {
   require(levelMatchers != null && levelMatchers.nonEmpty)
+  require(
+    exactMatchFilter != null && exactMatchFilter.map(_ != null).getOrElse(true) &&
+      commonLevelMatcher != null && commonLevelMatcher.map(_ != null).getOrElse(true))
 
   /**
    * Apply `SmvEntityMatcher` to the 2 DataFrames
@@ -31,11 +34,11 @@ case class SmvEntityMatcher(exactMatchFilter: AbstractExactMatchFilter,
   def doMatch(df1: DataFrame, df2: DataFrame): DataFrame = {
     require(df1 != null && df2 != null)
 
-    val ex = if (null == exactMatchFilter) NoOpExactMatchFilter else exactMatchFilter
+    val ex = exactMatchFilter.getOrElse(NoOpExactMatchFilter)
     // TODO: is there a way to avoid having to leak out the '_' prefix to the expression in the caller?
     val ExactMatchFilterResult(r1, r2, s1) = ex.extract(df1, df2.prefixFieldNames("_"))
 
-    val clm = if (null == commonLevelMatcher) CommonLevelMatcherNone else commonLevelMatcher
+    val clm = commonLevelMatcher.getOrElse(CommonLevelMatcherNone)
     val j0  = clm.join(r1, r2) // join leftover unmatched data from both data frames
     // sequentially apply level matchers to the join of unmatched data
     val j1 = levelMatchers.foldLeft(j0) { (df, matcher) =>
@@ -73,7 +76,7 @@ case class SmvEntityMatcher(exactMatchFilter: AbstractExactMatchFilter,
     // minus the rows that has false for all the matcher columns
     val s5 = s4.where(any(s4))
 
-    val allLevels = (if (exactMatchFilter == null) Nil else Seq(exactMatchFilter.colName)) ++
+    val allLevels = exactMatchFilter.map(f => Seq(f.colName)).getOrElse(Nil) ++
       levelMatchers.map { l =>
         l.getMatchColName
       }

@@ -43,8 +43,10 @@ class SmvEntityMatcherTest extends NameMatcherTestFixture {
     import ssc.implicits._
 
     val resultDF = SmvEntityMatcher(
-      ExactMatchFilter("Full_Name_Match", $"full_name" === $"_full_name"),
-      CommonLevelMatcherExpression(StringMetricUDFs.soundexMatch($"first_name", $"_first_name")),
+      Some(ExactMatchFilter("Full_Name_Match", $"full_name" === $"_full_name")),
+      Some(
+        CommonLevelMatcherExpression(
+          StringMetricUDFs.soundexMatch($"first_name", $"_first_name"))),
       List(
         ExactLevelMatcher("First_Name_Match", $"first_name" === $"_first_name"),
         FuzzyLevelMatcher("Levenshtein_City",
@@ -68,8 +70,8 @@ class SmvEntityMatcherTest extends NameMatcherTestFixture {
     import ssc.implicits._
 
     val resultDF = SmvEntityMatcher(
-      null,
-      null,
+      None,
+      None,
       List(
         FuzzyLevelMatcher("Zip_And_Levenshtein_City",
                           $"zip" === $"_zip",
@@ -93,8 +95,8 @@ class SmvEntityMatcherTest extends NameMatcherTestFixture {
     import ssc.implicits._
 
     val resultDF = SmvEntityMatcher(
-      null,
-      null,
+      None,
+      None,
       List(
         ExactLevelMatcher("Zip_Match", $"zip" === $"_zip")
       )
@@ -114,8 +116,8 @@ class SmvEntityMatcherTest extends NameMatcherTestFixture {
     import ssc.implicits._
 
     val resultDF = SmvEntityMatcher(
-      null,
-      null,
+      None,
+      None,
       List(
         FuzzyLevelMatcher("Zip_And_Levenshtein_City",
                           $"zip" === $"_zip",
@@ -149,8 +151,10 @@ class SmvEntityMatcherTest extends NameMatcherTestFixture {
     import ssc.implicits._
 
     val resultDF = SmvEntityMatcher(
-      null,
-      CommonLevelMatcherExpression(StringMetricUDFs.soundexMatch($"first_name", $"_first_name")),
+      None,
+      Some(
+        CommonLevelMatcherExpression(
+          StringMetricUDFs.soundexMatch($"first_name", $"_first_name"))),
       List(
         FuzzyLevelMatcher("Zip_And_Levenshtein_City",
                           $"zip" === $"_zip",
@@ -177,8 +181,8 @@ class SmvEntityMatcherTest extends NameMatcherTestFixture {
     import ssc.implicits._
 
     val resultDF = SmvEntityMatcher(
-      ExactMatchFilter("Full_Name_Match", $"full_name" === $"_full_name"),
-      null,
+      Some(ExactMatchFilter("Full_Name_Match", $"full_name" === $"_full_name")),
+      None,
       List(
         FuzzyLevelMatcher("Zip_And_Levenshtein_City",
                           $"zip" === $"_zip",
