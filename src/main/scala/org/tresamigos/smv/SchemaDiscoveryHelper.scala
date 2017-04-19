@@ -18,9 +18,11 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.tresamigos.smv.util.StringConversion._
 
+import scala.collection.mutable
 import scala.util.Try
 
 class SchemaDiscoveryHelper(sqlContext: SQLContext) {
+  import SchemaDiscoveryHelper._
 
   /**
    * Extract the column names from the csv header if it has one. In case of multi-line header the last header line is
@@ -49,104 +51,105 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
     }
   }
 
-  private def canConvertToyyyyMMddDate(str: String): Boolean = {
-    if (str.length == 8) {
-      val monthVal = str.substring(4, 6).toInt
-      if (monthVal < 1 || monthVal > 12) return false
+  private def canConvertToyyyyMMddDate(str: String): Boolean =
+    str match {
+      case dateR(_, month0, day0) =>
+        val month = month0.toInt
+        val day   = day0.toInt
 
-      val dayVal = str.substring(6, 8).toInt
-      if (dayVal < 1 || dayVal > 31) return false
-
-      true
-    } else {
-      false
+        month >= 1 && month <= 12 && day >= 1 && day <= 31
+      case _ =>
+        false
     }
-  }
 
   /**
    * Discover the type of a given column based on it value. Also perform type promotion to
    * accommodate all the possible values.
    * TODO: should consider using Decimal for large integer/float values (more than what can fit in long/double)
    */
-  private def getTypeFormat(curTypeFormat: TypeFormat, valueStr: String): TypeFormat = {
-    if (valueStr.isEmpty)
-      return curTypeFormat
+  private def getTypeFormat(curTypeFormat: Option[TypeFormat], valueStr: String): TypeFormat = {
+    if (valueStr.isEmpty) curTypeFormat.getOrElse(StringTypeFormat())
+    else
+      curTypeFormat match {
 
-    curTypeFormat match {
+        //Handling the initial case where the current column schema entry is not set yet
+        case None if canConvertToInt(valueStr) && canConvertToyyyyMMddDate(valueStr) =>
+          DateTypeFormat("yyyyMMdd")
+        case None if canConvertToInt(valueStr)                 => IntegerTypeFormat()
+        case None if canConvertToLong(valueStr)                => LongTypeFormat()
+        case None if canConvertToFloat(valueStr)               => FloatTypeFormat()
+        case None if canConvertToDouble(valueStr)              => DoubleTypeFormat()
+        case None if canConvertToBoolean(valueStr)             => BooleanTypeFormat()
+        case None if canConvertToDate(valueStr, "dd/MM/yyyy")  => DateTypeFormat("dd/MM/yyyy")
+        case None if canConvertToDate(valueStr, "dd-MM-yyyy")  => DateTypeFormat("dd-MM-yyyy")
+        case None if canConvertToDate(valueStr, "dd-MMM-yyyy") => DateTypeFormat("dd-MMM-yyyy")
+        case None if canConvertToDate(valueStr, "ddMMMyyyy")   => DateTypeFormat("ddMMMyyyy")
+        case None if canConvertToDate(valueStr, "yyyy-MM-dd")  => DateTypeFormat("yyyy-MM-dd")
+        case None                                              => StringTypeFormat()
 
-      //Handling the initial case where the current column schema entry is not set yet
-      case null if canConvertToInt(valueStr) && canConvertToyyyyMMddDate(valueStr) =>
-        DateTypeFormat("yyyyMMdd")
-      case null if canConvertToInt(valueStr)                 => IntegerTypeFormat()
-      case null if canConvertToLong(valueStr)                => LongTypeFormat()
-      case null if canConvertToFloat(valueStr)               => FloatTypeFormat()
-      case null if canConvertToDouble(valueStr)              => DoubleTypeFormat()
-      case null if canConvertToBoolean(valueStr)             => BooleanTypeFormat()
-      case null if canConvertToDate(valueStr, "dd/MM/yyyy")  => DateTypeFormat("dd/MM/yyyy")
-      case null if canConvertToDate(valueStr, "dd-MM-yyyy")  => DateTypeFormat("dd-MM-yyyy")
-      case null if canConvertToDate(valueStr, "dd-MMM-yyyy") => DateTypeFormat("dd-MMM-yyyy")
-      case null if canConvertToDate(valueStr, "ddMMMyyyy")   => DateTypeFormat("ddMMMyyyy")
-      case null if canConvertToDate(valueStr, "yyyy-MM-dd")  => DateTypeFormat("yyyy-MM-dd")
-      case null                                              => StringTypeFormat()
+        // Handling Integer type and its possible promotions
+        case Some(fmt @ IntegerTypeFormat(_)) if canConvertToInt(valueStr) => fmt
+        case Some(IntegerTypeFormat(_)) if canConvertToLong(valueStr)      => LongTypeFormat()
+        case Some(IntegerTypeFormat(_)) if canConvertToFloat(valueStr)     => FloatTypeFormat()
+        case Some(IntegerTypeFormat(_)) if canConvertToDouble(valueStr)    => DoubleTypeFormat()
+        case Some(IntegerTypeFormat(_))                                    => StringTypeFormat()
 
-      // Handling Integer type and its possible promotions
-      case IntegerTypeFormat(_) if canConvertToInt(valueStr)    => curTypeFormat
-      case IntegerTypeFormat(_) if canConvertToLong(valueStr)   => LongTypeFormat()
-      case IntegerTypeFormat(_) if canConvertToFloat(valueStr)  => FloatTypeFormat()
-      case IntegerTypeFormat(_) if canConvertToDouble(valueStr) => DoubleTypeFormat()
-      case IntegerTypeFormat(_)                                 => StringTypeFormat()
+        // Handling Long type and its possible promotions
+        case Some(fmt @ LongTypeFormat(_)) if canConvertToLong(valueStr) => fmt
+        case Some(LongTypeFormat(_)) if canConvertToDouble(valueStr)     => DoubleTypeFormat()
+        case Some(LongTypeFormat(_))                                     => StringTypeFormat()
 
-      // Handling Long type and its possible promotions
-      case LongTypeFormat(_) if canConvertToLong(valueStr)   => curTypeFormat
-      case LongTypeFormat(_) if canConvertToDouble(valueStr) => DoubleTypeFormat()
-      case LongTypeFormat(_)                                 => StringTypeFormat()
+        // Handling Float type and its possible promotions
+        case Some(fmt @ FloatTypeFormat(_)) if canConvertToFloat(valueStr) => fmt
+        case Some(FloatTypeFormat(_)) if canConvertToDouble(valueStr)      => DoubleTypeFormat()
+        case Some(FloatTypeFormat(_))                                      => StringTypeFormat()
 
-      // Handling Float type and its possible promotions
-      case FloatTypeFormat(_) if canConvertToFloat(valueStr)  => curTypeFormat
-      case FloatTypeFormat(_) if canConvertToDouble(valueStr) => DoubleTypeFormat()
-      case FloatTypeFormat(_)                                 => StringTypeFormat()
+        // Handling Double type and its possible promotions
+        case Some(fmt @ DoubleTypeFormat(_)) if canConvertToDouble(valueStr) => fmt
+        case Some(DoubleTypeFormat(_))                                       => StringTypeFormat()
 
-      // Handling Double type and its possible promotions
-      case DoubleTypeFormat(_) if canConvertToDouble(valueStr) => curTypeFormat
-      case DoubleTypeFormat(_)                                 => StringTypeFormat()
+        // Handling Boolean type and its possible promotions
+        case Some(fmt @ BooleanTypeFormat(_)) if canConvertToBoolean(valueStr) => fmt
+        case Some(BooleanTypeFormat(_))                                        => StringTypeFormat()
 
-      // Handling Boolean type and its possible promotions
-      case BooleanTypeFormat(_) if canConvertToBoolean(valueStr) => curTypeFormat
-      case BooleanTypeFormat(_)                                  => StringTypeFormat()
+        //TODO: Need to find a better way to match dates to avoid repetition.
 
-      //TODO: Need to find a better way to match dates to avoid repetition.
+        //The date format should not change,) if it did then we will treat the column as String
+        case Some(fmt @ DateTypeFormat("yyyyMMdd")) if canConvertToyyyyMMddDate(valueStr) => fmt
+        case Some(DateTypeFormat("yyyyMMdd")) if canConvertToInt(valueStr)                => IntegerTypeFormat()
+        case Some(DateTypeFormat("yyyyMMdd")) if canConvertToLong(valueStr)               => LongTypeFormat()
+        case Some(DateTypeFormat("yyyyMMdd")) if canConvertToFloat(valueStr)              => FloatTypeFormat()
+        case Some(DateTypeFormat("yyyyMMdd")) if canConvertToDouble(valueStr)             => DoubleTypeFormat()
+        case Some(DateTypeFormat("yyyyMMdd"))                                             => StringTypeFormat()
 
-      //The date format should not change, if it did then we will treat the column as String
-      case DateTypeFormat("yyyyMMdd") if canConvertToyyyyMMddDate(valueStr) => curTypeFormat
-      case DateTypeFormat("yyyyMMdd") if canConvertToInt(valueStr)          => IntegerTypeFormat()
-      case DateTypeFormat("yyyyMMdd") if canConvertToLong(valueStr)         => LongTypeFormat()
-      case DateTypeFormat("yyyyMMdd") if canConvertToFloat(valueStr)        => FloatTypeFormat()
-      case DateTypeFormat("yyyyMMdd") if canConvertToDouble(valueStr)       => DoubleTypeFormat()
-      case DateTypeFormat("yyyyMMdd")                                       => StringTypeFormat()
+        case Some(fmt @ DateTypeFormat("dd/MM/yyyy"))
+            if canConvertToDate(valueStr, "dd/MM/yyyy") =>
+          fmt
+        case Some(DateTypeFormat("dd/MM/yyyy")) => StringTypeFormat()
 
-      case DateTypeFormat("dd/MM/yyyy") if canConvertToDate(valueStr, "dd/MM/yyyy") =>
-        curTypeFormat
-      case DateTypeFormat("dd/MM/yyyy") => StringTypeFormat()
+        case Some(fmt @ DateTypeFormat("dd-MM-yyyy"))
+            if canConvertToDate(valueStr, "dd-MM-yyyy") =>
+          fmt
+        case Some(DateTypeFormat("dd-MM-yyyy")) => StringTypeFormat()
 
-      case DateTypeFormat("dd-MM-yyyy") if canConvertToDate(valueStr, "dd-MM-yyyy") =>
-        curTypeFormat
-      case DateTypeFormat("dd-MM-yyyy") => StringTypeFormat()
+        case Some(fmt @ DateTypeFormat("dd-MMM-yyyy"))
+            if canConvertToDate(valueStr, "dd-MMM-yyyy") =>
+          fmt
+        case Some(DateTypeFormat("dd-MMM-yyyy")) => StringTypeFormat()
 
-      case DateTypeFormat("dd-MMM-yyyy") if canConvertToDate(valueStr, "dd-MMM-yyyy") =>
-        curTypeFormat
-      case DateTypeFormat("dd-MMM-yyyy") => StringTypeFormat()
+        case Some(fmt @ DateTypeFormat("ddMMMyyyy")) if canConvertToDate(valueStr, "ddMMMyyyy") =>
+          fmt
+        case Some(DateTypeFormat("ddMMMyyyy")) => StringTypeFormat()
 
-      case DateTypeFormat("ddMMMyyyy") if canConvertToDate(valueStr, "ddMMMyyyy") => curTypeFormat
-      case DateTypeFormat("ddMMMyyyy")                                            => StringTypeFormat()
+        case Some(fmt @ DateTypeFormat("yyyy-MM-dd"))
+            if canConvertToDate(valueStr, "yyyy-MM-dd") =>
+          fmt
+        case Some(DateTypeFormat("yyyy-MM-dd")) => StringTypeFormat()
 
-      case DateTypeFormat("yyyy-MM-dd") if canConvertToDate(valueStr, "yyyy-MM-dd") =>
-        curTypeFormat
-      case DateTypeFormat("yyyy-MM-dd") => StringTypeFormat()
+        case Some(fmt @ StringTypeFormat(_, _)) => fmt
 
-      case StringTypeFormat(_, _) => curTypeFormat
-
-      case _ => StringTypeFormat()
-    }
+        case Some(_) => StringTypeFormat()
+      }
   }
 
   /**
@@ -165,8 +168,7 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
 
     val noHeadRDD = if (ca.hasHeader) CsvAttributes.dropHeader(strRDD) else strRDD
 
-    var typeFmts = new scala.collection.mutable.ArrayBuffer[TypeFormat]
-    for (i <- 0 until columns.length) typeFmts += null
+    var typeFmts = new mutable.HashMap[String, TypeFormat]()
 
     //TODO: What if the numLines is so big that rowsToParse will not fit in memory
     // An alternative is to use the mapPartitionWithIndex
@@ -174,37 +176,32 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
 
     val columnsWithIndex = columns.zipWithIndex
 
-    var validCount = 0
+    var validCount = false
     for (rowStr <- rowsToParse) {
       val rowValues = Try { parser.parseLine(rowStr) }.getOrElse(Array[String]())
       if (rowValues.length == columnsWithIndex.length) {
-        validCount += 1
-        for (index <- 0 until columns.length) {
-          val colVal = rowValues(index)
-          if (colVal.nonEmpty) {
-            typeFmts(index) = getTypeFormat(typeFmts(index), colVal)
-          }
+        validCount = true
+        columns.zipWithIndex.foreach {
+          case (column, index) =>
+            val colVal = rowValues(index)
+            if (colVal.nonEmpty) typeFmts(column) = getTypeFormat(typeFmts.get(column), colVal)
         }
       }
     }
 
     // handle case where we were not able to parse a single valid data line.
-    if (validCount == 0) {
+    if (!validCount)
       throw new IllegalStateException("Unable to find a single valid data line")
-    }
 
     //Now we should set the null schema entries to the Default StringSchemaEntry. This should be the case when the first
     //numLines values for a given column happen to be missing.
-    for (index <- 0 until columns.length) {
-      if (typeFmts(index) == null) {
-        typeFmts(index) = StringTypeFormat()
-      }
+    // Note: SmvSchema relies on the order of formatters, so we cannot just map typeFmts Map
+    // without taking into account columns order
+    val orderedFmts = columns.map { column =>
+      if (!typeFmts.contains(column)) (column, StringTypeFormat()) else (column, typeFmts(column))
     }
 
-    val res =
-      new SmvSchema(columns.zip(typeFmts).map { case (n, t) => SchemaEntry(n, t) }, Map.empty)
-
-    res.addCsvAttributes(ca)
+    new SmvSchema(orderedFmts.map { case (n, t) => SchemaEntry(n, t) }, Map.empty) addCsvAttributes (ca)
   }
 
   /**
@@ -218,4 +215,8 @@ class SchemaDiscoveryHelper(sqlContext: SQLContext) {
     val strRDD = sqlContext.sparkContext.textFile(dataPath)
     discoverSchema(strRDD, numLines)
   }
+}
+
+object SchemaDiscoveryHelper {
+  private val dateR = """(\d\d\d\d)(\d\d)(\d\d)""".r
 }
