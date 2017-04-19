@@ -304,9 +304,9 @@ object SchemaEntry {
     SchemaEntry(field, typeFmt)
   }
 
-  def apply(name: String, typeFmtStr: String, meta: String = null): SchemaEntry = {
+  def apply(name: String, typeFmtStr: String, meta: Option[String]): SchemaEntry = {
     val typeFmt  = TypeFormat(typeFmtStr)
-    val metaData = if (meta == null) Metadata.empty else Metadata.fromJson(meta)
+    val metaData = meta.map(Metadata.fromJson).getOrElse(Metadata.empty)
     val field    = StructField(name, typeFmt.dataType, true, metaData)
     SchemaEntry(field, typeFmt)
   }
@@ -315,7 +315,8 @@ object SchemaEntry {
     // *? is for non-greedy match
     val parseNT = """\s*([^:]*?)\s*:\s*([^@]*?)\s*(@metadata=(.*))?""".r
     nameAndType match {
-      case parseNT(n, t, dummy, meta) => SchemaEntry(n, t, meta)
+      case parseNT(n, t, dummy, null) => SchemaEntry(n, t, None)
+      case parseNT(n, t, dummy, meta) => SchemaEntry(n, t, Some(meta))
       case _                          => throw new SmvRuntimeException(s"Illegal SchemaEmtry string: $nameAndType")
     }
   }
