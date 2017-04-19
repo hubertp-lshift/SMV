@@ -64,7 +64,7 @@ package org.tresamigos.smv {
       object TestHeir
           extends SmvHierarchies(
             "hier",
-            SmvHierarchy("div", null, Seq("zip3", "terr", "div"))
+            SmvHierarchy("div", None, Seq("zip3", "terr", "div"))
           ) {
         override def applyToDf(df: DataFrame) = df
 

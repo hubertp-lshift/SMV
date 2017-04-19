@@ -42,32 +42,38 @@ private[smv] class SmvHierarchyColumns(prefix: String) {
  */
 case class SmvHierarchy(
     name: String,
-    hierarchyMap: SmvOutput,
+    hierarchyMap: Option[SmvOutput],
     hierarchy: Seq[String],
-    nameColPostfix: String = "_name"
+    nameColPostfix: String
 ) {
+
+  assert(hierarchyMap != null && hierarchyMap.map(_ != null).getOrElse(true))
+
   private val hierCols = new SmvHierarchyColumns(name + "_map")
 
-  private[smv] lazy val mapDF = hierarchyMap.asInstanceOf[SmvDataSet].rdd
+  private[smv] lazy val mapDF = hierarchyMap.map(_.asInstanceOf[SmvDataSet].rdd)
+
+  private[this] def mapDFColumn(name: String, suffix: String = ""): Column =
+    if (name == null) lit(null).cast(StringType)
+    else
+      mapDF
+        .filter(_.columns.contains(name + suffix))
+        .map(_.apply(name + suffix))
+        .getOrElse(lit(null).cast(StringType))
 
   private lazy val mapWithNameAndParent = hierarchy
     .zip(hierarchy.tail :+ (null: String))
-    .map {
+    .flatMap {
       case (h, p) =>
-        def hasCol(colName: String) = mapDF.columns.contains(colName)
-        def nameCol(colName: String) =
-          if (hasCol(colName)) mapDF(colName) else lit(null).cast(StringType)
-
-        mapDF
-          .select(
+        mapDF.map(
+          _.select(
             lit(h) as hierCols.typeName,
-            mapDF(h) as hierCols.valueName,
-            nameCol(h + nameColPostfix) as hierCols.nameName,
+            mapDFColumn(h) as hierCols.valueName,
+            mapDFColumn(h, nameColPostfix) as hierCols.nameName,
             lit(p).cast(StringType) as hierCols.pTypeName,
-            { if (p == null) lit(null).cast(StringType) else mapDF(p) } as hierCols.pValueName,
-            { if (p == null) lit(null).cast(StringType) else nameCol(p + nameColPostfix) } as hierCols.pNameName
-          )
-          .dedupByKey(hierCols.typeName, hierCols.valueName)
+            mapDFColumn(p) as hierCols.pValueName,
+            mapDFColumn(p, nameColPostfix) as hierCols.pNameName
+          ).dedupByKey(hierCols.typeName, hierCols.valueName))
     }
     .reduce(_.unionAll(_))
 
@@ -141,6 +147,14 @@ case class SmvHierarchy(
   }
 }
 
+object SmvHierarchy {
+  def apply(name: String, hierarchyMap: SmvOutput, hierarchy: Seq[String]): SmvHierarchy =
+    SmvHierarchy(name, Some(hierarchyMap), hierarchy, "_name")
+
+  def apply(name: String, hierarchyMap: Option[SmvOutput], hierarchy: Seq[String]): SmvHierarchy =
+    SmvHierarchy(name, hierarchyMap, hierarchy, "_name")
+}
+
 /**
  * Define whether to keep name columns and parent columns when perform rollup
  * operation
@@ -192,9 +206,11 @@ class SmvHierarchies(
     val hierarchies: SmvHierarchy*
 ) extends SmvAncillary { self =>
 
-  private lazy val mapLinks = hierarchies.filterNot(_.hierarchyMap == null).map { h =>
-    new SmvModuleLink(h.hierarchyMap)
-  }
+  private lazy val mapLinks =
+    for {
+      hierarchy <- hierarchies
+      hMap      <- hierarchy.hierarchyMap
+    } yield new SmvModuleLink(hMap)
 
   override def requiresDS() = mapLinks
 
@@ -262,12 +278,12 @@ class SmvHierarchies(
    * definition within `SmvHierarchies`
    **/
   private[smv] def applyToDf(df: DataFrame): DataFrame = {
-    val mapDFsMap = hierarchies
-      .filterNot(_.hierarchyMap == null)
-      .map { h =>
-        (h.hierarchy.head, h.mapDF)
-      }
-      .toMap
+    val mapDFsMap =
+      (for {
+        hierarchy <- hierarchies
+        _         <- hierarchy.hierarchyMap
+        mapDF     <- hierarchy.mapDF
+      } yield (hierarchy.hierarchy.head, mapDF)).toMap
 
     mapDFsMap.foldLeft(df)((res, pair) =>
       pair match { case (k, v) => res.smvJoinByKey(v, Seq(k), SmvJoinType.Inner) })
@@ -368,7 +384,7 @@ class SmvHierarchies(
   /**
    * Add prefix_name column on DF with prefix_type, prefix_value already
    **/
-  def addNameCols(df: DataFrame) = hierarchies.filterNot(_.hierarchyMap == null).foldLeft(df) {
+  def addNameCols(df: DataFrame) = hierarchies.filter(_.hierarchyMap.nonEmpty).foldLeft(df) {
     (l, r) =>
       r.addNameCols(l, colNames)
   }

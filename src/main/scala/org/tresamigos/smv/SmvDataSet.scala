@@ -33,8 +33,7 @@ trait FilenamePart {
  */
 abstract class SmvDataSet extends FilenamePart {
 
-  lazy val app: SmvApp            = SmvApp.app
-  private var rddCache: DataFrame = null
+  lazy val app: SmvApp = SmvApp.app
 
   /**
    * The FQN of an SmvDataSet is its classname for Scala implementations.

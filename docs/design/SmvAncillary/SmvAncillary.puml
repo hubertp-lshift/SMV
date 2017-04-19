@@ -11,7 +11,7 @@ namespace smv {
 
   class SmvHierarchy {
     name: String
-    hierarchyMap: SmvOutput
+    hierarchyMap: Option[SmvOutput]
     hierarchy: Seq[String]
   }
 
