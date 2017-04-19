@@ -76,7 +76,7 @@ object ShellCmd {
    * list all datasets in a stage
    * @param stageName could be the FQN or just the basename
    **/
-  def ls(stageName: String) = appGU.createDSList(dsm.inferStageFullName(stageName))
+  def ls(stageName: String) = appGU.createDSList(Some(dsm.inferStageFullName(stageName)))
 
   /**
    * list all the datasets in the entire project
@@ -88,7 +88,7 @@ object ShellCmd {
    * `dead` dataset is defined as "no contribution to the Output modules of the stage"
    * @param stageName could be the FQN or the basename
    **/
-  def lsDead(stageName: String) = appGU.createDeadDSList(dsm.inferStageFullName(stageName))
+  def lsDead(stageName: String) = appGU.createDeadDSList(Some(dsm.inferStageFullName(stageName)))
 
   /**
    * list `dead` datasets in the entire project
@@ -101,7 +101,8 @@ object ShellCmd {
    * Note: a `deadLeaf` dataset must be `dead`, but some `dead` datasets are Not `leaf`s
    * @param stageName could be the FQN or the basename
    */
-  def lsDeadLeaf(stageName: String) = appGU.createDeadLeafDSList(dsm.inferStageFullName(stageName))
+  def lsDeadLeaf(stageName: String) =
+    appGU.createDeadLeafDSList(Some(dsm.inferStageFullName(stageName)))
 
   /**
    * list `leaf` datasets in the entire project

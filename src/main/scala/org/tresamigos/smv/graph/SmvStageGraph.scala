@@ -277,22 +277,18 @@ private[smv] class SmvGraphUtil(app: SmvApp, pstages: Seq[String] = Nil) {
     }
   }
 
-  private def _listAll(stageName: String, f: String => Seq[SmvDataSet]): String = {
-    if (stageName == null) {
+  private def _listAll(stageName: Option[String], f: String => Seq[SmvDataSet]): String =
+    stageName.map(name => _listInStage(f(name)).mkString("\n")).getOrElse {
       /* list all in the app (the stages) */
       stages
         .flatMap { s =>
           Seq("", s + ":") ++ _listInStage(f(s), "  ")
         }
         .mkString("\n")
-    } else {
-      /* list DS in the specified stage */
-      _listInStage(f(stageName)).mkString("\n")
     }
-  }
 
   /** list all datasets */
-  def createDSList(s: String = null): String =
+  def createDSList(s: Option[String] = None): String =
     _listAll(s, { s =>
       dsm.dataSetsForStageWithLink(s)
     })
@@ -315,13 +311,13 @@ private[smv] class SmvGraphUtil(app: SmvApp, pstages: Seq[String] = Nil) {
   }
 
   /** list `dead` datasets */
-  def createDeadDSList(s: String = null): String =
+  def createDeadDSList(s: Option[String] = None): String =
     _listAll(s, { s =>
       deadDS(s)
     })
 
   /** list `leaf` datasets */
-  def createDeadLeafDSList(s: String = null): String =
+  def createDeadLeafDSList(s: Option[String] = None): String =
     _listAll(s, { s =>
       deadLeafDS(s)
     })
