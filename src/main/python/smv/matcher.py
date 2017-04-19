@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from smv import SmvApp
-from smv.utils import smv_copy_array
+from smv.utils import smv_copy_array, wrap_in_scala_option
 
 from pyspark.sql import HiveContext, DataFrame
 
@@ -43,15 +43,16 @@ class SmvEntityMatcher(object):
         groupCondition,
         levelLogics
     ):
-        jlls = SmvApp.getInstance().sc._gateway.new_array(SmvApp.getInstance()._jvm.org.tresamigos.smv.matcher.LevelLogic, len(levelLogics))
+        jvmRef = SmvApp.getInstance()._jvm
+        jlls = SmvApp.getInstance().sc._gateway.new_array(jvmRef.org.tresamigos.smv.matcher.LevelLogic, len(levelLogics))
         for i in range(0, len(jlls)):
             jlls[i] = levelLogics[i]
 
-        self.jem = SmvApp.getInstance()._jvm.org.tresamigos.smv.python.SmvPythonHelper.createMatcher(
+        self.jem = jvmRef.org.tresamigos.smv.python.SmvPythonHelper.createMatcher(
             leftId,
             rightId,
-            exactMatchFilter,
-            groupCondition,
+            wrap_in_scala_option(jvmRef, exactMatchFilter),
+            wrap_in_scala_option(jvmRef, groupCondition),
             jlls
         )
 

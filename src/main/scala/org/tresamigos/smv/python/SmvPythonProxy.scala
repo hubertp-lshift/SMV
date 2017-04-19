@@ -118,15 +118,15 @@ object SmvPythonHelper {
   def createMatcher(
       leftId: String,
       rightId: String,
-      exactMatchFilter: PreFilter,
-      groupCondition: AbstractGroupCondition,
+      exactMatchFilter: Option[PreFilter],
+      groupCondition: Option[AbstractGroupCondition],
       levelLogics: Array[LevelLogic]
   ): SmvEntityMatcher = {
     val lls = levelLogics.toSeq
     SmvEntityMatcher(leftId,
                      rightId,
-                     if (exactMatchFilter == null) NoOpPreFilter else exactMatchFilter,
-                     if (groupCondition == null) NoOpGroupCondition else groupCondition,
+                     exactMatchFilter.getOrElse(NoOpPreFilter),
+                     groupCondition.getOrElse(NoOpGroupCondition),
                      lls)
   }
 
