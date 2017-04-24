@@ -10,8 +10,6 @@ scalacOptions ++= Seq("-deprecation", "-feature")
 
 val sparkVersion = "1.5.2"
 
-val latestScalafmt = "0.7.0-RC1"
-
 libraryDependencies ++= Seq(
   "org.apache.spark"             %% "spark-sql"         % sparkVersion % "provided",
   "org.apache.spark"             %% "spark-hive"        % sparkVersion % "provided",
@@ -33,7 +31,7 @@ publishArtifact in Test := true
 commands += Command.args("scalafmt", "Run scalafmt cli.") {
   case (state, args) =>
     val Right(scalafmt) =
-      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(latestScalafmt)
+      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(ScalafmtOnCompilePlugin.latestScalafmt)
     scalafmt.main("--non-interactive" +: args.toArray)
     state
 }
