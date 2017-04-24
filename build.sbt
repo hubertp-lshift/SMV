@@ -10,6 +10,8 @@ scalacOptions ++= Seq("-deprecation", "-feature")
 
 val sparkVersion = "1.5.2"
 
+val latestScalafmt = "0.7.0-RC1"
+
 libraryDependencies ++= Seq(
   "org.apache.spark"             %% "spark-sql"         % sparkVersion % "provided",
   "org.apache.spark"             %% "spark-hive"        % sparkVersion % "provided",
@@ -25,6 +27,16 @@ libraryDependencies ++= Seq(
 parallelExecution in Test := false
 
 publishArtifact in Test := true
+
+// Once upgraded to sbt 1.0.0 (even milestones) this hack
+// is no longer necessary
+commands += Command.args("scalafmt", "Run scalafmt cli.") {
+  case (state, args) =>
+    val Right(scalafmt) =
+      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(latestScalafmt)
+    scalafmt.main("--non-interactive" +: args.toArray)
+    state
+}
 
 // Create itest task that runs integration tests
 val itest = TaskKey[Unit]("itest", "Run Integration Test")
@@ -45,7 +57,7 @@ pytest := {
 
 // Create alltest task that sequentially runs each test suite
 val allTest = TaskKey[Unit]("alltest", "Run All Test Suites")
-allTest <<= Def.sequential(
+allTest := Def.sequential(
   test in Test,
   pytest,
   itest
