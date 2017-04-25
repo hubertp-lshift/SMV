@@ -4,16 +4,27 @@ import sbt.Keys._
 import sbt.Def.Initialize
 import sbt.inc.Analysis
 
+/**
+  * The ScalafmtOnCompilerPlugin adds an additional step before `compile` task
+  * in Compile and Test scopes.
+  * The plugin 1) fetches, if necessary, a specific version of Scalafmt,
+  * collects all files that have been changed, based on the cached information
+  * about the state of the project, and 3) runs scalafmt on the selected files.
+  * No prior configuration by the developer is necessary.
+  *
+  * Based on https://gist.github.com/hseeberger/03677ef75bfadb7663c3b41bb58c702b
+  * Refactored to keep classfile names shorter (important for encrypted fs).
+  */
 object ScalafmtOnCompilePlugin extends AutoPlugin {
 
-  val latestScalafmt = "0.7.0-RC1"
+  private val latestScalafmt = "0.7.0-RC1"
+
+  def getLatestScalafmt(): Either[Throwable, ScalafmtBootstrap] =
+    org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(latestScalafmt)
 
   object autoImport {
 
-    private def getLatestScalafmt(): Either[Throwable, ScalafmtBootstrap] =
-      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(latestScalafmt)
-
-    def format(handler: Set[File] => Unit, msg: String)(cache: java.io.File, sources: Set[java.io.File], sF: TaskStreams, projRef: ProjectReference) = {
+    private def format(handler: Set[File] => Unit, msg: String)(cache: java.io.File, sources: Set[java.io.File], sF: TaskStreams, projRef: ProjectReference) = {
       def update(handler: Set[File] => Unit, msg: String)(
         in: ChangeReport[File], out: ChangeReport[File]) = {
         val label = Reference.display(projRef)
@@ -27,7 +38,7 @@ object ScalafmtOnCompilePlugin extends AutoPlugin {
       FileFunction.cached(cache)(FilesInfo.hash,
         FilesInfo.exists)(update(handler, msg))(sources)
     }
-    def formattingHandler(files: Set[File]) =
+    private def formattingHandler(files: Set[File]) =
       if (files.nonEmpty) {
         val filesArg = files.map(_.getAbsolutePath).mkString(",")
         for {
@@ -35,7 +46,7 @@ object ScalafmtOnCompilePlugin extends AutoPlugin {
         } yield scalafmt.main(List("--non-interactive", "-i", "-f", filesArg))
       }
 
-    lazy val scalafmtIncImpl: Initialize[Task[Unit]] = {
+    private lazy val scalafmtIncImpl: Initialize[Task[Unit]] = {
       sbt.Def.task {
         val cache = streams.value.cacheDirectory / "scalafmt"
         val include = includeFilter.in(scalafmtInc).value

@@ -27,12 +27,14 @@ parallelExecution in Test := false
 publishArtifact in Test := true
 
 // Once upgraded to sbt 1.0.0 (even milestones) this hack
-// is no longer necessary
+// is no longer necessary. Note that this command is present irrespective of the
+// `scalafmt on compile` task that is present in the ScalafmtOnCompile plugin, and
+// accepts normal scalafmt arguments.
 commands += Command.args("scalafmt", "Run scalafmt cli.") {
   case (state, args) =>
-    val Right(scalafmt) =
-      org.scalafmt.bootstrap.ScalafmtBootstrap.fromVersion(ScalafmtOnCompilePlugin.latestScalafmt)
-    scalafmt.main("--non-interactive" +: args.toArray)
+    for {
+      scalafmt <- ScalafmtOnCompilePlugin.getLatestScalafmt().right
+    } yield scalafmt.main("--non-interactive" +: args.toArray)
     state
 }
 
